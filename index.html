@@ -65,10 +65,10 @@
             align-items: center;
         }
 
-        /* خصائص أجزاء الشخصية المرتبطة بالعظام */
+        /* خصائص أجزاء الشخصية المرتبطة بالعظام من المنتصف */
         .body-part {
             position: absolute;
-            transform-origin: top center;
+            transform-origin: center center;
             user-select: none;
             pointer-events: none;
         }
@@ -96,7 +96,7 @@
     <script>
         let charactersData = [];
 
-        // 1. تحميل ملف المكتبة مع منع الكاش عبر Date.now()
+        // 1. تحميل ملف المكتبة مع منع الكاش
         async function loadCharacterLibrary() {
             try {
                 const response = await fetch('./list.json?t=' + Date.now());
@@ -105,7 +105,6 @@
                 charactersData = await response.json();
                 populateDropdown();
                 
-                // تحميل أول شخصية افتراضياً إذا كانت متوفرة
                 if (charactersData.length > 0) {
                     renderCharacter(charactersData[0]);
                 }
@@ -115,7 +114,7 @@
             }
         }
 
-        // 2. تعبئة قائمة الاختيار بأسماء الشخصيات الموجودة في المكتبة
+        // 2. تعبئة قائمة الاختيار بأسماء الشخصيات
         function populateDropdown() {
             const select = document.getElementById('characterSelect');
             select.innerHTML = '';
@@ -128,26 +127,24 @@
             });
         }
 
-        // 3. تركيب ورسم الشخصية المحددة وربط صورها بإحداثيات عظامها
+        // 3. تركيب ورسم الشخصية المحددة بإحداثياتها الصحيحة
         function renderCharacter(character) {
             const rigContainer = document.getElementById('characterRig');
-            rigContainer.innerHTML = ''; // تفريغ الشخصية السابقة
+            rigContainer.innerHTML = ''; 
 
-            // المرور على كل جزء ووضعه في مكانه الصحيح
             for (const [partName, partInfo] of Object.entries(character.parts)) {
                 const img = document.createElement('img');
                 img.src = partInfo.src;
                 img.className = 'body-part';
                 img.style.zIndex = partInfo.zIndex || 1;
                 
-                // تطبيق الإحداثيات المضبوطة لكل جزء
                 img.style.transform = `translate(${partInfo.x}px, ${partInfo.y}px)`;
                 
                 rigContainer.appendChild(img);
             }
         }
 
-        // 4. الحدث عند تغيير الاختيار من القائمة المنسدلة
+        // 4. الحدث عند تغيير الاختيار
         document.getElementById('characterSelect').addEventListener('change', (e) => {
             const selectedIndex = e.target.value;
             if (charactersData[selectedIndex]) {
@@ -155,7 +152,6 @@
             }
         });
 
-        // تشغيل التحميل عند فتح الصفحة
         loadCharacterLibrary();
     </script>
 
