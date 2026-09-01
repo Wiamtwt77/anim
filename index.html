@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Upload Studio - النسخة النهائية المكتملة</title>
+    <title>Twencraft Upload Studio - النظام الهيكلي المكتمل</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -105,9 +105,9 @@
 <body>
 
     <div class="app-container">
-        <!-- لوحة تحكم العظام الهرمية -->
+        <!-- لوحة التحكم الهيكلي للمفاصل -->
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">لوحة التحريك والتحكم بالمفاصل</div>
+            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">نظام الهيكل العظمي والطبقات</div>
             <div id="bonesControls"></div>
         </div>
 
@@ -124,11 +124,11 @@
     </div>
 
     <script>
-        // إعداد الهيكل العظمي مع ضبط إحداثيات الذراعين على y: -30
+        // هيكل بيانات الشخصية مع الروابط الأبوية والطبقات التشريحية الدقيقة (Z-Index)
         const charactersData = [
             {
                 id: "hero_mascot",
-                name: "الشخصية الأساسية (المجسم الكامل المضبوط)",
+                name: "الشخصية الأساسية (نظام الهيكل المتكامل)",
                 rootBone: "torso",
                 bones: {
                     torso: {
@@ -136,7 +136,7 @@
                         width: 74,
                         x: 0,
                         y: -32,
-                        zIndex: 2,
+                        zIndex: 2, // الجذع في المنتصف التشريحي
                         origin: "center center",
                         minRot: -20, maxRot: 20,
                         children: ["head", "right_arm", "left_arm", "right_leg", "left_leg"]
@@ -146,7 +146,7 @@
                         width: 88,
                         x: 0,
                         y: -55,
-                        zIndex: 3,
+                        zIndex: 3, // الرأس فوق الجذع
                         origin: "bottom center",
                         minRot: -45, maxRot: 45,
                         children: []
@@ -156,7 +156,7 @@
                         width: 32,
                         x: 30,
                         y: -30,
-                        zIndex: 1,
+                        zIndex: 1, // الذراع الخلفية أو المعيارية
                         origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
@@ -166,7 +166,7 @@
                         width: 32,
                         x: -33,
                         y: -30,
-                        zIndex: 1,
+                        zIndex: 4, // الذراع الأمامية تتقدم عند الحاجة
                         origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
@@ -219,6 +219,7 @@
             });
         }
 
+        // بناء العقد الشجرية للأب والابن مع تطبيق إحداثيات المفصل ونظام الطبقات
         function createBoneElement(boneName, bonesDict) {
             const bone = bonesDict[boneName];
             
@@ -235,6 +236,7 @@
             
             const rot = boneRotations[boneName] || 0;
 
+            // توجيه نقطة الدوران والارتكاز بناءً على الإحداثيات الهندسية الدقيقة
             if (bone.origin === 'top center') {
                 img.style.left = '50%';
                 img.style.top = '0';
@@ -251,6 +253,7 @@
             
             nodeDiv.appendChild(img);
 
+            // تتبع الأبناء وربطهم شجرياً لتوارث الحركة والتحويلات
             if (bone.children && bone.children.length > 0) {
                 bone.children.forEach(childName => {
                     nodeDiv.appendChild(createBoneElement(childName, bonesDict));
@@ -275,7 +278,7 @@
                 const div = document.createElement('div');
                 div.className = 'bone-control';
                 div.innerHTML = `
-                    <label><span>عظمة: ${partName}</span><span id="val_${partName}">${currentRot}°</span></label>
+                    <label><span>مفصل: ${partName}</span><span id="val_${partName}">${currentRot}°</span></label>
                     <input type="range" min="${bone.minRot}" max="${bone.maxRot}" value="${currentRot}" data-part="${partName}">
                 `;
                 bonesControls.appendChild(div);
