@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>استوديو تحريك الشخصيات - المعايرة الحية</title>
+    <title>Twencraft Upload Studio - النسخة التجريبية لنظام التحريك</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -17,17 +17,51 @@
             align-items: center;
             min-height: 100vh;
         }
-        h1 { margin-bottom: 10px; font-size: 20px; color: #4CAF50; }
-        
-        .container {
+        .app-container {
             display: flex;
             gap: 20px;
-            align-items: flex-start;
+            max-width: 950px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
         }
-
+        .sidebar {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            width: 320px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            max-height: 520px;
+            overflow-y: auto;
+        }
+        .stage-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .library-bar {
+            background: #2a2a2a;
+            padding: 12px 20px;
+            border-radius: 8px;
+            width: 100%;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        select, input[type="range"] {
+            width: 100%;
+            background: #333;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 6px;
+            border-radius: 4px;
+        }
+        select { cursor: pointer; }
         .stage {
-            width: 350px;
-            height: 450px;
+            width: 400px;
+            height: 500px;
             background: #252525;
             border: 2px dashed #444;
             border-radius: 12px;
@@ -38,7 +72,6 @@
             overflow: hidden;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         }
-
         .character-rig {
             position: relative;
             width: 0;
@@ -47,144 +80,143 @@
             justify-content: center;
             align-items: center;
         }
-
         .body-part {
             position: absolute;
-            transform-origin: top center;
             user-select: none;
             pointer-events: none;
         }
-
-        /* لوحة التحكم الجانبية لتعديل الإحداثيات مباشرة */
-        .controls-panel {
-            background: #2a2a2a;
-            padding: 15px;
-            border-radius: 8px;
-            width: 320px;
-            max-height: 450px;
-            overflow-y: auto;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .part-control {
-            margin-bottom: 10px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #444;
-        }
-        .part-control label {
-            display: block;
+        .bone-control {
+            margin-bottom: 12px;
             font-size: 13px;
+        }
+        .bone-control label {
+            display: flex;
+            justify-content: space-between;
             color: #4CAF50;
             margin-bottom: 4px;
-        }
-        .inputs-row {
-            display: flex;
-            gap: 8px;
-            font-size: 12px;
-        }
-        .inputs-row div { flex: 1; }
-        .inputs-row input {
-            width: 100%;
-            background: #333;
-            border: 1px solid #555;
-            color: #fff;
-            padding: 4px;
-            border-radius: 4px;
-            text-align: center;
-        }
-        .output-box {
-            margin-top: 15px;
-            background: #111;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 11px;
-            color: #00ffcc;
-            white-space: pre-wrap;
-            word-break: break-all;
         }
     </style>
 </head>
 <body>
 
-    <h1>استوديو المعايرة الحية لأجزاء الشخصية</h1>
-    
-    <div class="container">
-        <!-- مساحة العرض -->
-        <div class="stage">
-            <div class="character-rig" id="characterRig"></div>
+    <div class="app-container">
+        <!-- لوحة التحكم وتحريك العظام -->
+        <div class="sidebar">
+            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">لوحة تحكم نظام العظام</div>
+            <div id="bonesControls"></div>
         </div>
 
-        <!-- لوحة التحكم الحية -->
-        <div class="controls-panel" id="controlsPanel">
-            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b;">عُمّر أو عدّل القيم هنا:</div>
-            <div id="slidersContainer"></div>
-            <div class="output-box" id="outputJson"></div>
+        <div class="stage-container">
+            <!-- شريط مكتبة الشخصيات -->
+            <div class="library-bar">
+                <label for="characterSelect" style="white-space: nowrap;">المكتبة:</label>
+                <select id="characterSelect"></select>
+            </div>
+
+            <!-- مساحة المعاينة والتحريك -->
+            <div class="stage">
+                <div class="character-rig" id="characterRig"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // هيكل البيانات القابل للتعديل الفوري
-        let currentCharacter = {
-            id: "hero_mascot",
-            name: "الشخصية الأساسية",
-            parts: {
-                torso:      { src: "./res/torso.png",      width: 90,  x: 0,   y: -30,  zIndex: 2 },
-                head:       { src: "./res/head.png",       width: 100, x: 0,   y: -140, zIndex: 3 },
-                right_arm:  { src: "./res/right_arm.png",  width: 32,  x: -45, y: -40,  zIndex: 1 },
-                left_arm:   { src: "./res/left_arm.png",   width: 32,  x: 45,  y: -40,  zIndex: 1 },
-                right_leg:  { src: "./res/right_leg.png",  width: 35,  x: -20, y: 50,   zIndex: 1 },
-                left_leg:   { src: "./res/left_leg.png",   width: 35,  x: 20,  y: 50,   zIndex: 1 }
+        // قاعدة البيانات المتكاملة مع الأرقام الدقيقة التي تم معايرتها
+        const charactersData = [
+            {
+                id: "hero_mascot",
+                name: "الشخصية الأساسية (الافتراضية)",
+                parts: {
+                    torso:      { src: "./res/torso.png",      width: 74, x: 1,   y: -37,  zIndex: 2, origin: "center center" },
+                    head:       { src: "./res/head.png",       width: 88, x: 0,   y: -140, zIndex: 3, origin: "bottom center" },
+                    right_arm:  { src: "./res/right_arm.png",  width: 32, x: 34,  y: -40,  zIndex: 1, origin: "top center" },
+                    left_arm:   { src: "./res/left_arm.png",   width: 32, x: -34, y: -43,  zIndex: 1, origin: "top center" },
+                    right_leg:  { src: "./res/right_leg.png",  width: 32, x: 22,  y: 50,   zIndex: 1, origin: "top center" },
+                    left_leg:   { src: "./res/left_leg.png",   width: 25, x: -22, y: 50,   zIndex: 1, origin: "top center" }
+                }
             }
+        ];
+
+        let activeCharacterIndex = 0;
+        let boneRotations = {
+            head: 0,
+            right_arm: 0,
+            left_arm: 0,
+            right_leg: 0,
+            left_leg: 0,
+            torso: 0
         };
 
         const rigContainer = document.getElementById('characterRig');
-        const slidersContainer = document.getElementById('slidersContainer');
-        const outputJson = document.getElementById('outputJson');
+        const characterSelect = document.getElementById('characterSelect');
+        const bonesControls = document.getElementById('bonesControls');
 
-        function render() {
+        function initLibrary() {
+            characterSelect.innerHTML = '';
+            charactersData.forEach((char, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = char.name;
+                characterSelect.appendChild(opt);
+            });
+        }
+
+        function renderCharacter() {
+            const char = charactersData[activeCharacterIndex];
             rigContainer.innerHTML = '';
-            for (const [partName, info] of Object.entries(currentCharacter.parts)) {
-                // رسم الصورة
+
+            for (const [partName, info] of Object.entries(char.parts)) {
                 const img = document.createElement('img');
                 img.src = info.src;
                 img.className = 'body-part';
                 img.style.width = info.width + 'px';
                 img.style.zIndex = info.zIndex;
-                img.style.transform = `translate(${info.x}px, ${info.y}px)`;
+                img.style.transformOrigin = info.origin || 'top center';
+                
+                const rot = boneRotations[partName] || 0;
+                // دمج الإحداثيات الثابتة مع زوايا دوران العظام الحية
+                img.style.transform = `translate(${info.x}px, ${info.y}px) rotate(${rot}deg)`;
+                
                 rigContainer.appendChild(img);
             }
-            outputJson.textContent = JSON.stringify(currentCharacter.parts, null, 2);
         }
 
-        function buildControls() {
-            slidersContainer.innerHTML = '';
-            for (const [partName, info] of Object.entries(currentCharacter.parts)) {
+        function buildBoneControls() {
+            bonesControls.innerHTML = '';
+            const char = charactersData[activeCharacterIndex];
+
+            for (const partName of Object.keys(char.parts)) {
+                const currentRot = boneRotations[partName] || 0;
                 const div = document.createElement('div');
-                div.className = 'part-control';
+                div.className = 'bone-control';
                 div.innerHTML = `
-                    <label>${partName}</label>
-                    <div class="inputs-row">
-                        <div>عرض: <input type="number" value="${info.width}" data-part="${partName}" data-prop="width"></div>
-                        <div>X: <input type="number" value="${info.x}" data-part="${partName}" data-prop="x"></div>
-                        <div>Y: <input type="number" value="${info.y}" data-part="${partName}" data-prop="y"></div>
-                    </div>
+                    <label><span>عظمة: ${partName}</span><span id="val_${partName}">${currentRot}°</span></label>
+                    <input type="range" min="-90" max="90" value="${currentRot}" data-part="${partName}">
                 `;
-                slidersContainer.appendChild(div);
+                bonesControls.appendChild(div);
             }
 
-            // الاستماع لتغييرات المدخلات بشكل فوري
-            slidersContainer.querySelectorAll('input').forEach(input => {
-                input.addEventListener('input', (e) => {
+            bonesControls.querySelectorAll('input[type="range"]').forEach(slider => {
+                slider.addEventListener('input', (e) => {
                     const part = e.target.dataset.part;
-                    const prop = e.target.dataset.prop;
-                    currentCharacter.parts[part][prop] = parseFloat(e.target.value) || 0;
-                    render();
+                    const val = parseInt(e.target.value);
+                    boneRotations[part] = val;
+                    document.getElementById(`val_${part}`).textContent = val + '°';
+                    renderCharacter();
                 });
             });
         }
 
-        buildControls();
-        render();
+        characterSelect.addEventListener('change', (e) => {
+            activeCharacterIndex = parseInt(e.target.value);
+            Object.keys(boneRotations).forEach(k => boneRotations[k] = 0);
+            buildBoneControls();
+            renderCharacter();
+        });
+
+        initLibrary();
+        buildBoneControls();
+        renderCharacter();
     </script>
 
 </body>
