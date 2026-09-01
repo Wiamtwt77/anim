@@ -6,182 +6,170 @@
     <title>استوديو تحريك الشخصيات - Character Studio</title>
     <style>
         :root {
-            --bg-color: #1e1e2f;
-            --panel-bg: #2a2a3d;
-            --accent-color: #ff758c;
-            --text-color: #ffffff;
+            --bg-color: #1e1e24;
+            --panel-bg: #2d2d38;
+            --accent-color: #ff6b81;
+            --text-color: #f1f2f6;
+            --border-radius: 12px;
         }
-
         body {
-            margin: 0;
-            padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* لوحة التحكم الجانبية */
-        aside {
-            width: 300px;
-            background-color: var(--panel-bg);
-            border-left: 1px solid #3f3f5f;
+            margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.3);
-        }
-
-        h2 {
-            margin-top: 0;
-            font-size: 1.2rem;
-            border-bottom: 2px solid var(--accent-color);
-            padding-bottom: 10px;
-        }
-
-        .part-item {
-            background: #35354f;
-            padding: 10px 15px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            font-size: 0.9rem;
+            min-height: 100vh;
         }
-
-        .part-item span {
-            color: #b0b0c3;
+        header {
+            margin-bottom: 20px;
+            text-align: center;
         }
-
-        /* مساحة العمل الرئيسية لعرض الشخصية */
-        main {
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: var(--accent-color);
+        }
+        .main-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .canvas-area {
             flex: 1;
+            background: #ffffff;
+            border-radius: var(--border-radius);
+            position: relative;
+            height: 500px;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+        /* حاوية أجزاء الشخصية */
+        #character-container {
             position: relative;
-            background-image: radial-gradient(#2d2d44 1px, transparent 1px);
-            background-size: 20px 20px;
+            width: 300px;
+            height: 400px;
         }
-
-        canvas {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed #4f4f7f;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .loading {
+        .char-part {
             position: absolute;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            user-select: none;
+            pointer-events: none;
+            left: 0;
+            top: 0;
+        }
+        /* ترتيب الطبقات (Z-Index) */
+        #part-chest { z-index: 1; }
+        #part-head { z-index: 2; }
+        #part-hair { z-index: 3; }
+
+        .sidebar {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .panel {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: var(--border-radius);
+        }
+        .panel h3 {
+            margin-top: 0;
             font-size: 1.1rem;
-            color: var(--accent-color);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
+        }
+        .part-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            background: rgba(255,255,258,0.08);
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        .status {
+            font-size: 0.85rem;
+            color: #2ed573;
         }
     </style>
 </head>
 <body>
 
-    <!-- الشريط الجانبي لعرض الأجزاء المستوردة -->
-    <aside>
-        <h2>أجزاء الشخصية</h2>
-        <div id="partsList">
-            <p style="color: #888;">جاري تحميل الأجزاء...</p>
-        </div>
-    </aside>
+    <header>
+        <h1>استوديو تحريك الشخصيات الافتراضية</h1>
+        <p>القاعدة الأساسية لقراءة أجزاء الشخصية من ملف list.json</p>
+    </header>
 
-    <!-- منطقة الرسم وعرض الشخصية -->
-    <main>
-        <div id="loadingText" class="loading">جاري جلب الشخصية وتجهيز اللوحة...</div>
-        <!-- لوحة الرسم التي سيتم دمج ورسم الأجزاء عليها -->
-        <canvas id="characterCanvas" width="500" height="600"></canvas>
-    </main>
+    <div class="main-container">
+        <!-- منطقة عرض الشخصية -->
+        <div class="canvas-area">
+            <div id="character-container">
+                <!-- ستُحقن صور الأجزاء هنا برمجياً -->
+            </div>
+        </div>
+
+        <!-- الشريط الجانبي لعرض الأجزاء -->
+        <div class="sidebar">
+            <div class="panel">
+                <h3>الأجزاء المحملة</h3>
+                <div id="parts-list-ui">
+                    <!-- سيتم تحديث القائمة تلقائياً -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const canvas = document.getElementById('characterCanvas');
-        const ctx = canvas.getContext('2d');
-        const partsListContainer = document.getElementById('partsList');
-        const loadingText = document.getElementById('loadingText');
+        document.addEventListener("DOMContentLoaded", () => {
+            const container = document.getElementById("character-container");
+            const partsListUi = document.getElementById("parts-list-ui");
 
-        // تخزين الصور المُحمّلة
-        const loadedImages = {};
-        
-        // ترتيب طبقات الرسم (من الخلف إلى الأمام)
-        const renderOrder = ['chest', 'head', 'hair'];
+            // جلب بيانات الشخصية عبر list.json
+            fetch('./list.json')
+                .then(response => {
+                    if (!response.ok) throw new Error("تعذر تحميل ملف list.json");
+                    return response.json();
+                })
+                .then(parts => {
+                    partsListUi.innerHTML = "";
+                    container.innerHTML = "";
 
-        async function initStudio() {
-            try {
-                // جلب ملف الـ JSON من الجذر الرئيسي
-                const response = await fetch('./list.json');
-                if (!response.ok) throw new Error('فشل تحميل ملف list.json');
-                
-                const partsData = await response.json();
-                partsListContainer.innerHTML = ''; // تفريغ النص التمهيدي
-
-                // تحميل كل صورة على حدة
-                const promises = partsData.map(part => {
-                    return new Promise((resolve, reject) => {
-                        const img = new Image();
+                    parts.forEach(part => {
+                        // 1. بناء عنصر الصورة داخل مساحة العمل
+                        const img = document.createElement("img");
                         img.src = part.src;
-                        img.onload = () => {
-                            loadedImages[part.id] = img;
-                            
-                            // إضافة العنصر للقائمة الجانبية في الواجهة
-                            partsListContainer.innerHTML += `
-                                <div class="part-item">
-                                    <span>${part.n}</span>
-                                    <strong style="color: var(--accent-color);">متصل ✓</strong>
-                                </div>
-                            `;
-                            resolve();
-                        };
-                        img.onerror = () => reject(`تعذر تحميل الصورة: ${part.src}`);
+                        img.alt = part.n;
+                        img.id = `part-${part.id}`;
+                        img.className = "char-part";
+                        container.appendChild(img);
+
+                        // 2. إظهار العنصر في القائمة الجانبية كدليل على نجاح التحميل
+                        const itemUi = document.createElement("div");
+                        itemUi.className = "part-item";
+                        itemUi.innerHTML = `<span>${part.n} (${part.id})</span> <span class="status">تم التحميل ✓</span>`;
+                        partsListUi.appendChild(itemUi);
                     });
+                })
+                .catch(error => {
+                    console.error("خطأ:", error);
+                    partsListUi.innerHTML = `<p style="color: #ff4757; font-size: 0.85rem;">خطأ: تأكد من صحة مسارات الصور وملف list.json.</p>`;
                 });
-
-                // الانتظار حتى يتم تحميل جميع الصور بالكامل
-                await Promise.all(promises);
-                loadingText.style.display = 'none';
-                
-                // رسم الشخصية على الـ Canvas
-                drawCharacter();
-
-            } catch (error) {
-                console.error(error);
-                loadingText.innerText = 'حدث خطأ أثناء تحميل أجزاء الشخصية!';
-                loadingText.style.color = '#ff4d4d';
-            }
-        }
-
-        function drawCharacter() {
-            // تنظيف اللوحة قبل الرسم
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // نقطة المنتصف المبدئية لمركز الشخصية على اللوحة
-            const centerX = canvas.width / 2;
-            const startY = 150;
-
-            // رسم الأجزاء بالتسلسل الصحيح (صدر -> رأس -> شعر)
-            renderOrder.forEach(id => {
-                if (loadedImages[id]) {
-                    const img = loadedImages[id];
-                    // حساب إحداثيات التمركز لكل قطعة بناءً على أبعادها
-                    const x = centerX - (img.width / 2);
-                    let y = startY;
-
-                    // تعديل طفيف للمواضع الرأسية افتراضياً لترتيب الشكل العام
-                    if (id === 'head') y += 80;
-                    if (id === 'hair') y += 40;
-                    if (id === 'chest') y += 220;
-
-                    ctx.drawImage(img, x, y);
-                }
-            });
-        }
-
-        // تشغيل الاستوديو عند تحميل الصفحة
-        window.onload = initStudio;
+        });
     </script>
 </body>
 </html>
