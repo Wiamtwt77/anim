@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Upload Studio - لوحة معايرة المقاييس الدقيقة</title>
+    <title>Twencraft Upload Studio - النسخة النهائية المستقرة</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -20,7 +20,7 @@
         .app-container {
             display: flex;
             gap: 20px;
-            max-width: 1050px;
+            max-width: 980px;
             width: 100%;
             justify-content: center;
             flex-wrap: wrap;
@@ -29,9 +29,9 @@
             background: #2a2a2a;
             padding: 15px;
             border-radius: 8px;
-            width: 360px;
+            width: 340px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            max-height: 600px;
+            max-height: 550px;
             overflow-y: auto;
         }
         .stage-container {
@@ -50,15 +50,15 @@
             align-items: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        select, input[type="number"], input[type="range"] {
+        select, input[type="range"] {
+            width: 100%;
             background: #333;
             color: #fff;
             border: 1px solid #444;
-            padding: 4px 8px;
+            padding: 6px;
             border-radius: 4px;
         }
-        input[type="number"] { width: 65px; text-align: center; }
-        select { width: 100%; cursor: pointer; }
+        select { cursor: pointer; }
         .stage {
             width: 400px;
             height: 500px;
@@ -97,43 +97,24 @@
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 1px solid #444;
-            font-size: 12px;
+            font-size: 13px;
         }
         .bone-control label {
-            display: block;
-            color: #ffeb3b;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .control-row {
             display: flex;
-            gap: 8px;
-            margin-top: 4px;
-            align-items: center;
             justify-content: space-between;
-        }
-        .export-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px;
-            width: 100%;
-            border-radius: 5px;
-            cursor: pointer;
+            color: #4CAF50;
             font-weight: bold;
-            margin-top: 10px;
+            margin-bottom: 6px;
         }
-        .export-btn:hover { background: #45a049; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <!-- لوحة التحكم الحية بالأرقام -->
+        <!-- لوحة تحكم العظام الهرمية -->
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 10px; color: #4CAF50; font-size: 14px;">لوحة معايرة المقاييس الدقيقة</div>
+            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">نظام المفاصل الهرمي المستقر</div>
             <div id="bonesControls"></div>
-            <button class="export-btn" onclick="exportConfig()">استخراج المقاييس الحالية (نسخ للاتصال)</button>
         </div>
 
         <div class="stage-container">
@@ -149,58 +130,71 @@
     </div>
 
     <script>
+        // إدخال المقاييس الدقيقة المستخرجة بعد المعايرة
         const charactersData = [
             {
                 id: "hero_mascot",
-                name: "الشخصية الأساسية (للمعايرة)",
+                name: "الشخصية الأساسية (المقاييس المضبوطة)",
                 rootBone: "torso",
                 bones: {
                     torso: {
                         src: "./res/torso.png",
                         width: 74,
-                        x: 0, y: 0,
+                        x: 0,
+                        y: -32,
                         zIndex: 2,
                         origin: "center center",
+                        minRot: -20, maxRot: 20,
                         children: ["head", "right_arm", "left_arm", "right_leg", "left_leg"]
                     },
                     head: {
                         src: "./res/head.png",
                         width: 88,
-                        x: 0, y: -110,
+                        x: 0,
+                        y: -97,
                         zIndex: 3,
                         origin: "bottom center",
+                        minRot: -45, maxRot: 45,
                         children: []
                     },
                     right_arm: {
                         src: "./res/right_arm.png",
                         width: 32,
-                        x: 42, y: -50,
+                        x: 30,
+                        y: -11,
                         zIndex: 1,
                         origin: "top center",
+                        minRot: -90, maxRot: 90,
                         children: []
                     },
                     left_arm: {
                         src: "./res/left_arm.png",
                         width: 32,
-                        x: -42, y: -50,
+                        x: -33,
+                        y: -11,
                         zIndex: 1,
                         origin: "top center",
+                        minRot: -90, maxRot: 90,
                         children: []
                     },
                     right_leg: {
                         src: "./res/right_leg.png",
                         width: 32,
-                        x: 20, y: 75,
+                        x: 25,
+                        y: 92,
                         zIndex: 1,
                         origin: "top center",
+                        minRot: -45, maxRot: 45,
                         children: []
                     },
                     left_leg: {
                         src: "./res/left_leg.png",
                         width: 25,
-                        x: -20, y: 75,
+                        x: -18,
+                        y: 82,
                         zIndex: 1,
                         origin: "top center",
+                        minRot: -45, maxRot: 45,
                         children: []
                     }
                 }
@@ -208,7 +202,14 @@
         ];
 
         let activeCharacterIndex = 0;
-        let boneRotations = { head: 0, right_arm: 0, left_arm: 0, right_leg: 0, left_leg: 0, torso: 0 };
+        let boneRotations = {
+            head: 0,
+            right_arm: 0,
+            left_arm: 0,
+            right_leg: 0,
+            left_leg: 0,
+            torso: 0
+        };
 
         const rigContainer = document.getElementById('characterRig');
         const characterSelect = document.getElementById('characterSelect');
@@ -267,44 +268,26 @@
                 const div = document.createElement('div');
                 div.className = 'bone-control';
                 div.innerHTML = `
-                    <label>عظمة: ${partName}</label>
-                    <div class="control-row">
-                        <span>موقع X: <input type="number" value="${bone.x}" data-part="${partName}" data-prop="x"></span>
-                        <span>موقع Y: <input type="number" value="${bone.y}" data-part="${partName}" data-prop="y"></span>
-                    </div>
-                    <div class="control-row" style="margin-top: 6px;">
-                        <span>العرض (Width): <input type="number" value="${bone.width}" data-part="${partName}" data-prop="width"></span>
-                        <span>دوران (°): <input type="number" value="${currentRot}" data-part="${partName}" data-prop="rot" min="-90" max="90"></span>
-                    </div>
+                    <label><span>عظمة: ${partName}</span><span id="val_${partName}">${currentRot}°</span></label>
+                    <input type="range" min="${bone.minRot}" max="${bone.maxRot}" value="${currentRot}" data-part="${partName}">
                 `;
                 bonesControls.appendChild(div);
             }
 
-            // الاستماع للتعديلات الحية على الأرقام
-            bonesControls.querySelectorAll('input').forEach(input => {
-                input.addEventListener('input', (e) => {
+            bonesControls.querySelectorAll('input[type="range"]').forEach(slider => {
+                slider.addEventListener('input', (e) => {
                     const part = e.target.dataset.part;
-                    const prop = e.target.dataset.prop;
-                    const val = parseFloat(e.target.value) || 0;
-
-                    if (prop === 'rot') {
-                        boneRotations[part] = val;
-                    } else {
-                        charactersData[activeCharacterIndex].bones[part][prop] = val;
-                    }
+                    const val = parseInt(e.target.value);
+                    boneRotations[part] = val;
+                    document.getElementById(`val_${part}`).textContent = val + '°';
                     renderCharacter();
                 });
             });
         }
 
-        function exportConfig() {
-            const char = charactersData[activeCharacterIndex];
-            console.log(JSON.stringify(char.bones, null, 4));
-            alert("تم طباعة المقاييس الحالية في وحدة التحكم (Console) F12، يمكنك نسخها وإرسالها لي فوراً!");
-        }
-
         characterSelect.addEventListener('change', (e) => {
             activeCharacterIndex = parseInt(e.target.value);
+            Object.keys(boneRotations).forEach(k => boneRotations[k] = 0);
             buildBoneControls();
             renderCharacter();
         });
