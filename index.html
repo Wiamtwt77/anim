@@ -64,7 +64,7 @@
 
         .body-part {
             position: absolute;
-            transform-origin: center center;
+            transform-origin: top center; /* نقطة الارتكاز من الأعلى لتبدو الأذرع والأرجل طبيعية */
             user-select: none;
             pointer-events: none;
         }
@@ -86,18 +86,18 @@
     </div>
 
     <script>
-        // قاعدة بيانات الشخصيات مباشرة داخل الكود لتجنب مشاكل الكاش والمسارات
+        // تعريف الشخصيات مع تحديد عرض دقيق (width) لكل جزء ليتناسب مع البقية
         const charactersData = [
             {
                 id: "hero_mascot",
                 name: "الشخصية الأساسية (الافتراضية)",
                 parts: {
-                    torso: { src: "./res/torso.png", x: 0, y: 0, zIndex: 2 },
-                    head: { src: "./res/head.png", x: 0, y: -130, zIndex: 3 },
-                    right_arm: { src: "./res/right_arm.png", x: -45, y: -25, zIndex: 1 },
-                    left_arm: { src: "./res/left_arm.png", x: 45, y: -25, zIndex: 1 },
-                    right_leg: { src: "./res/right_leg.png", x: -20, y: 105, zIndex: 1 },
-                    left_leg: { src: "./res/left_leg.png", x: 20, y: 105, zIndex: 1 }
+                    torso:      { src: "./res/torso.png",      width: 90,  x: -45,  y: -50,  zIndex: 2 },
+                    head:       { src: "./res/head.png",       width: 110, x: -55,  y: -155, zIndex: 3 },
+                    right_arm:  { src: "./res/right_arm.png",  width: 35,  x: -80,  y: -40,  zIndex: 1 },
+                    left_arm:   { src: "./res/left_arm.png",   width: 35,  x: 45,   y: -40,  zIndex: 1 },
+                    right_leg:  { src: "./res/right_leg.png",  width: 38,  x: -42,  y: 45,   zIndex: 1 },
+                    left_leg:   { src: "./res/left_leg.png",   width: 38,  x: 4,    y: 45,   zIndex: 1 }
                 }
             }
         ];
@@ -110,20 +110,13 @@
                 const img = document.createElement('img');
                 img.src = partInfo.src;
                 img.className = 'body-part';
+                img.style.width = partInfo.width + 'px'; // تطبيق التحجيم الإجباري
                 img.style.zIndex = partInfo.zIndex || 1;
                 img.style.transform = `translate(${partInfo.x}px, ${partInfo.y}px)`;
                 rigContainer.appendChild(img);
             }
         }
 
-        document.getElementById('characterSelect').addEventListener('change', (e) => {
-            const selectedIndex = e.target.value;
-            if (charactersData[selectedIndex]) {
-                renderCharacter(charactersData[selectedIndex]);
-            }
-        });
-
-        // تشغيل العرض فور فتح الصفحة
         renderCharacter(charactersData[0]);
     </script>
 
