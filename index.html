@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مكتبة الشخصيات الافتراضية - استوديو التحريك</title>
     <style>
         * { box-sizing: border-box; }
@@ -96,11 +96,11 @@
     <script>
         let charactersData = [];
 
-        // 1. تحميل ملف المكتبة (characters.json) عند فتح الصفحة
+        // 1. تحميل ملف المكتبة (list.json) عند فتح الصفحة
         async function loadCharacterLibrary() {
             try {
-                const response = await fetch('./characters.json');
-                if (!response.ok) throw new Error('فشل في جلب ملف المكتبة characters.json');
+                const response = await fetch('./list.json');
+                if (!response.ok) throw new Error('فشل في جلب ملف المكتبة list.json');
                 
                 charactersData = await response.json();
                 populateDropdown();
@@ -133,14 +133,14 @@
             const rigContainer = document.getElementById('characterRig');
             rigContainer.innerHTML = ''; // تفريغ الشخصية السابقة
 
-            // المرور على كل جزء (رأس، صدر، أذرع، أرجل) ووضعه في مكانه
+            // المرور على كل جزء ووضعه في مكانه الصحيح
             for (const [partName, partInfo] of Object.entries(character.parts)) {
                 const img = document.createElement('img');
                 img.src = partInfo.src;
                 img.className = 'body-part';
                 img.style.zIndex = partInfo.zIndex || 1;
                 
-                // تطبيق الإحداثيات المخصصة لكل عظمة/جزء
+                // تطبيق الإحداثيات المخصصة لكل جزء
                 img.style.transform = `translate(${partInfo.x}px, ${partInfo.y}px)`;
                 
                 rigContainer.appendChild(img);
