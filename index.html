@@ -80,15 +80,8 @@
             justify-content: center;
             align-items: center;
         }
-        .torso-bone {
-            position: absolute;
-            width: 0;
-            height: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .bone-joint {
+        /* عقدة العظمة الهرمية */
+        .bone-node {
             position: absolute;
             width: 0;
             height: 0;
@@ -116,17 +109,20 @@
 <body>
 
     <div class="app-container">
+        <!-- لوحة التحكم -->
         <div class="sidebar">
             <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">نظام العظام الهرمي (Parent-Child)</div>
             <div id="bonesControls"></div>
         </div>
 
         <div class="stage-container">
+            <!-- مكتبة الشخصيات -->
             <div class="library-bar">
                 <label for="characterSelect" style="white-space: nowrap;">المكتبة:</label>
                 <select id="characterSelect"></select>
             </div>
 
+            <!-- مساحة المعاينة -->
             <div class="stage">
                 <div class="character-rig" id="characterRig"></div>
             </div>
@@ -134,65 +130,66 @@
     </div>
 
     <script>
+        // تعريف هيكل البيانات هرمياً بحيث تتبع الأطراف عظمة الجذع (Torso)
         const charactersData = [
             {
                 id: "hero_mascot",
                 name: "الشخصية الأساسية (الافتراضية)",
-                hierarchy: {
+                rootBone: "torso",
+                bones: {
                     torso: {
                         src: "./res/torso.png",
                         width: 74,
-                        x: 0,
-                        y: 0,
+                        x: 1,
+                        y: -37,
                         zIndex: 2,
                         origin: "center center",
-                        children: [
-                            {
-                                id: "head",
-                                src: "./res/head.png",
-                                width: 88,
-                                x: 0,
-                                y: -110,
-                                zIndex: 3,
-                                origin: "bottom center"
-                            },
-                            {
-                                id: "right_arm",
-                                src: "./res/right_arm.png",
-                                width: 32,
-                                x: 34,
-                                y: -25,
-                                zIndex: 1,
-                                origin: "top center"
-                            },
-                            {
-                                id: "left_arm",
-                                src: "./res/left_arm.png",
-                                width: 32,
-                                x: -34,
-                                y: -25,
-                                zIndex: 1,
-                                origin: "top center"
-                            },
-                            {
-                                id: "right_leg",
-                                src: "./res/right_leg.png",
-                                width: 32,
-                                x: 20,
-                                y: 80,
-                                zIndex: 1,
-                                origin: "top center"
-                            },
-                            {
-                                id: "left_leg",
-                                src: "./res/left_leg.png",
-                                width: 25,
-                                x: -20,
-                                y: 80,
-                                zIndex: 1,
-                                origin: "top center"
-                            }
-                        ]
+                        children: ["head", "right_arm", "left_arm", "right_leg", "left_leg"]
+                    },
+                    head: {
+                        src: "./res/head.png",
+                        width: 88,
+                        x: 0,
+                        y: -105, // موقع الرأس بالنسبة لمركز الجذع
+                        zIndex: 3,
+                        origin: "bottom center",
+                        children: []
+                    },
+                    right_arm: {
+                        src: "./res/right_arm.png",
+                        width: 32,
+                        x: 35,
+                        y: -25, // موقع مفصل الكتف الأيمن بالنسبة للجذع
+                        zIndex: 1,
+                        origin: "top center",
+                        children: []
+                    },
+                    left_arm: {
+                        src: "./res/left_arm.png",
+                        width: 32,
+                        x: -35,
+                        y: -25, // موقع مفصل الكتف الأيسر بالنسبة للجذع
+                        zIndex: 1,
+                        origin: "top center",
+                        children: []
+                    },
+                    right_leg: {
+                        src: "./res/right_leg.png",
+                        width: 32,
+                        x: 18,
+                        y: 35, // موقع مفصل الورك الأيمن بالنسبة للجذع
+                        zIndex: 1,
+                        origin: "top center",
+                        children: []
+                    },
+                    left_leg: {
+                        src: "./res/left_leg.png",
+                        width: 25,
+                        x: -18,
+                        y: 35, // موقع مفصل الورك الأيسر بالنسبة للجذع
+                        zIndex: 1,
+                        origin: "top center",
+                        children: []
                     }
                 }
             }
@@ -200,12 +197,12 @@
 
         let activeCharacterIndex = 0;
         let boneRotations = {
-            torso: 0,
             head: 0,
             right_arm: 0,
             left_arm: 0,
             right_leg: 0,
-            left_leg: 0
+            left_leg: 0,
+            torso: 0
         };
 
         const rigContainer = document.getElementById('characterRig');
@@ -222,52 +219,53 @@
             });
         }
 
+        // دالة تعاودية (Recursive) لبناء الشجرة الهرمية في الـ DOM
+        function createBoneElement(boneName, bonesDict) {
+            const bone = bonesDict[boneName];
+            
+            // حاوية المفصل العظمي
+            const nodeDiv = document.createElement('div');
+            nodeDiv.className = 'bone-node';
+            nodeDiv.style.zIndex = bone.zIndex;
+            nodeDiv.style.transform = `translate(${bone.x}px, ${bone.y}px)`;
+
+            // صورة العضو المرتبطة بهذا المفصل
+            const img = document.createElement('img');
+            img.src = bone.src;
+            img.className = 'body-part';
+            img.style.width = bone.width + 'px';
+            img.style.transformOrigin = bone.origin;
+            
+            const rot = boneRotations[boneName] || 0;
+            img.style.transform = `rotate(${rot}deg)`;
+            
+            nodeDiv.appendChild(img);
+
+            // إضافة العناصر الأبناء داخل عنصر الأب هرمياً
+            if (bone.children && bone.children.length > 0) {
+                bone.children.forEach(childName => {
+                    const childElement = createBoneElement(childName, bonesDict);
+                    nodeDiv.appendChild(childElement);
+                });
+            }
+
+            return nodeDiv;
+        }
+
         function renderCharacter() {
             const char = charactersData[activeCharacterIndex];
             rigContainer.innerHTML = '';
-
-            const torsoData = char.hierarchy.torso;
             
-            const torsoJoint = document.createElement('div');
-            torsoJoint.className = 'torso-bone';
-            torsoJoint.style.zIndex = torsoData.zIndex;
-            torsoJoint.style.transform = `translate(${torsoData.x}px, ${torsoData.y}px) rotate(${boneRotations.torso}deg)`;
-
-            const torsoImg = document.createElement('img');
-            torsoImg.src = torsoData.src;
-            torsoImg.className = 'body-part';
-            torsoImg.style.width = torsoData.width + 'px';
-            torsoImg.style.transformOrigin = torsoData.origin;
-            torsoImg.style.transform = `translate(-50%, -50%)`;
-            torsoJoint.appendChild(torsoImg);
-
-            torsoData.children.forEach(child => {
-                const childJoint = document.createElement('div');
-                childJoint.className = 'bone-joint';
-                childJoint.style.zIndex = child.zIndex;
-                childJoint.style.transform = `translate(${child.x}px, ${child.y}px)`;
-
-                const childImg = document.createElement('img');
-                childImg.src = child.src;
-                childImg.className = 'body-part';
-                childImg.style.width = child.width + 'px';
-                childImg.style.transformOrigin = child.origin;
-                
-                const rot = boneRotations[child.id] || 0;
-                childImg.style.transform = `rotate(${rot}deg)`;
-
-                childJoint.appendChild(childImg);
-                torsoJoint.appendChild(childJoint);
-            });
-
-            rigContainer.appendChild(torsoJoint);
+            // بناء الشجرة بدءاً من الجذر الأساسي (Torso)
+            const rootTree = createBoneElement(char.rootBone, char.bones);
+            rigContainer.appendChild(rootTree);
         }
 
         function buildBoneControls() {
             bonesControls.innerHTML = '';
-            const partsList = ['torso', 'head', 'right_arm', 'left_arm', 'right_leg', 'left_leg'];
+            const char = charactersData[activeCharacterIndex];
 
-            partsList.forEach(partName => {
+            for (const partName of Object.keys(char.bones)) {
                 const currentRot = boneRotations[partName] || 0;
                 const div = document.createElement('div');
                 div.className = 'bone-control';
@@ -276,7 +274,7 @@
                     <input type="range" min="-90" max="90" value="${currentRot}" data-part="${partName}">
                 `;
                 bonesControls.appendChild(div);
-            });
+            }
 
             bonesControls.querySelectorAll('input[type="range"]').forEach(slider => {
                 slider.addEventListener('input', (e) => {
@@ -300,5 +298,6 @@
         buildBoneControls();
         renderCharacter();
     </script>
+
 </body>
 </html>
