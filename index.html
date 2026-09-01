@@ -107,7 +107,7 @@
     <div class="app-container">
         <!-- لوحة تحكم العظام الهرمية -->
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">لوحة التحريك الهرمي المتكامل</div>
+            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">لوحة التحريك والتحكم بالمفاصل</div>
             <div id="bonesControls"></div>
         </div>
 
@@ -124,10 +124,11 @@
     </div>
 
     <script>
+        // إعداد الهيكل العظمي مع ضبط إحداثيات الذراعين على y: -30
         const charactersData = [
             {
                 id: "hero_mascot",
-                name: "الشخصية الأساسية (المقاييس النهائية)",
+                name: "الشخصية الأساسية (المجسم الكامل المضبوط)",
                 rootBone: "torso",
                 bones: {
                     torso: {
@@ -144,7 +145,7 @@
                         src: "./res/head.png",
                         width: 88,
                         x: 0,
-                        y: -97,
+                        y: -55,
                         zIndex: 3,
                         origin: "bottom center",
                         minRot: -45, maxRot: 45,
@@ -173,8 +174,8 @@
                     right_leg: {
                         src: "./res/right_leg.png",
                         width: 32,
-                        x: 25,
-                        y: 92,
+                        x: 18,
+                        y: 40,
                         zIndex: 1,
                         origin: "top center",
                         minRot: -45, maxRot: 45,
@@ -183,8 +184,8 @@
                     left_leg: {
                         src: "./res/left_leg.png",
                         width: 25,
-                        x: -18,
-                        y: 82,
+                        x: -15,
+                        y: 40,
                         zIndex: 1,
                         origin: "top center",
                         minRot: -45, maxRot: 45,
