@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Upload Studio - النسخة التجريبية لنظام التحريك</title>
+    <title>Twencraft Upload Studio - النسخة التجريبية المستقرة</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -80,6 +80,16 @@
             justify-content: center;
             align-items: center;
         }
+        /* عظمة المفصل الثابتة في مكانها */
+        .bone-joint {
+            position: absolute;
+            width: 0;
+            height: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* الصورة التي تدور داخل مفصلها الثابت */
         .body-part {
             position: absolute;
             user-select: none;
@@ -100,20 +110,20 @@
 <body>
 
     <div class="app-container">
-        <!-- لوحة التحكم وتحريك العظام -->
+        <!-- لوحة تحريك العظام -->
         <div class="sidebar">
             <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">لوحة تحكم نظام العظام</div>
             <div id="bonesControls"></div>
         </div>
 
         <div class="stage-container">
-            <!-- شريط مكتبة الشخصيات -->
+            <!-- مكتبة الشخصيات -->
             <div class="library-bar">
                 <label for="characterSelect" style="white-space: nowrap;">المكتبة:</label>
                 <select id="characterSelect"></select>
             </div>
 
-            <!-- مساحة المعاينة والتحريك -->
+            <!-- مساحة المعاينة -->
             <div class="stage">
                 <div class="character-rig" id="characterRig"></div>
             </div>
@@ -121,7 +131,6 @@
     </div>
 
     <script>
-        // قاعدة البيانات المتكاملة مع الأرقام الدقيقة التي تم معايرتها
         const charactersData = [
             {
                 id: "hero_mascot",
@@ -166,18 +175,24 @@
             rigContainer.innerHTML = '';
 
             for (const [partName, info] of Object.entries(char.parts)) {
+                // 1. حاوية المفصل (تتولى التموضع الثابت فقط)
+                const jointDiv = document.createElement('div');
+                jointDiv.className = 'bone-joint';
+                jointDiv.style.zIndex = info.zIndex;
+                jointDiv.style.transform = `translate(${info.x}px, ${info.y}px)`;
+
+                // 2. صورة العضو (تتولى نقطة الارتكاز والدوران حصرياً)
                 const img = document.createElement('img');
                 img.src = info.src;
                 img.className = 'body-part';
                 img.style.width = info.width + 'px';
-                img.style.zIndex = info.zIndex;
                 img.style.transformOrigin = info.origin || 'top center';
                 
                 const rot = boneRotations[partName] || 0;
-                // دمج الإحداثيات الثابتة مع زوايا دوران العظام الحية
-                img.style.transform = `translate(${info.x}px, ${info.y}px) rotate(${rot}deg)`;
+                img.style.transform = `rotate(${rot}deg)`;
                 
-                rigContainer.appendChild(img);
+                jointDiv.appendChild(img);
+                rigContainer.appendChild(jointDiv);
             }
         }
 
