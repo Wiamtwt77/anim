@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مكتبة الشخصيات الافتراضية - استوديو التحريك</title>
+    <title>استوديو تحريك الشخصيات</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -19,7 +19,6 @@
         }
         h1 { margin-bottom: 10px; font-size: 22px; color: #4CAF50; }
         
-        /* شريط اختيار الشخصيات من المكتبة */
         .library-bar {
             background: #2a2a2a;
             padding: 15px 25px;
@@ -40,7 +39,6 @@
             cursor: pointer;
         }
 
-        /* مساحة العمل لعرض الشخصية المركبة */
         .stage {
             width: 400px;
             height: 500px;
@@ -55,7 +53,6 @@
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* حاوية أجزاء الشخصية (الجذر المركزي) */
         .character-rig {
             position: relative;
             width: 0;
@@ -65,7 +62,6 @@
             align-items: center;
         }
 
-        /* خصائص أجزاء الشخصية المرتبطة بالعظام من المنتصف */
         .body-part {
             position: absolute;
             transform-origin: center center;
@@ -78,56 +74,34 @@
 
     <h1>مكتبة الشخصيات الجاهزة</h1>
     
-    <!-- قائمة اختيار الشخصية -->
     <div class="library-bar">
         <label for="characterSelect">اختر شخصية:</label>
         <select id="characterSelect">
-            <option value="">جاري تحميل المكتبة...</option>
+            <option value="0">الشخصية الأساسية (الافتراضية)</option>
         </select>
     </div>
 
-    <!-- مساحة المعاينة -->
     <div class="stage">
-        <div class="character-rig" id="characterRig">
-            <!-- سيتم تركيب أجزاء الشخصية هنا برمجياً -->
-        </div>
+        <div class="character-rig" id="characterRig"></div>
     </div>
 
     <script>
-        let charactersData = [];
-
-        // 1. تحميل ملف المكتبة مع منع الكاش
-        async function loadCharacterLibrary() {
-            try {
-                const response = await fetch('./list.json?t=' + Date.now());
-                if (!response.ok) throw new Error('فشل في جلب ملف المكتبة list.json');
-                
-                charactersData = await response.json();
-                populateDropdown();
-                
-                if (charactersData.length > 0) {
-                    renderCharacter(charactersData[0]);
+        // قاعدة بيانات الشخصيات مباشرة داخل الكود لتجنب مشاكل الكاش والمسارات
+        const charactersData = [
+            {
+                id: "hero_mascot",
+                name: "الشخصية الأساسية (الافتراضية)",
+                parts: {
+                    torso: { src: "./res/torso.png", x: 0, y: 0, zIndex: 2 },
+                    head: { src: "./res/head.png", x: 0, y: -130, zIndex: 3 },
+                    right_arm: { src: "./res/right_arm.png", x: -45, y: -25, zIndex: 1 },
+                    left_arm: { src: "./res/left_arm.png", x: 45, y: -25, zIndex: 1 },
+                    right_leg: { src: "./res/right_leg.png", x: -20, y: 105, zIndex: 1 },
+                    left_leg: { src: "./res/left_leg.png", x: 20, y: 105, zIndex: 1 }
                 }
-            } catch (error) {
-                console.error('خطأ:', error);
-                document.getElementById('characterSelect').innerHTML = '<option>خطأ في تحميل المكتبة!</option>';
             }
-        }
+        ];
 
-        // 2. تعبئة قائمة الاختيار بأسماء الشخصيات
-        function populateDropdown() {
-            const select = document.getElementById('characterSelect');
-            select.innerHTML = '';
-            
-            charactersData.forEach((char, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = char.name;
-                select.appendChild(option);
-            });
-        }
-
-        // 3. تركيب ورسم الشخصية المحددة بإحداثياتها الصحيحة
         function renderCharacter(character) {
             const rigContainer = document.getElementById('characterRig');
             rigContainer.innerHTML = ''; 
@@ -137,14 +111,11 @@
                 img.src = partInfo.src;
                 img.className = 'body-part';
                 img.style.zIndex = partInfo.zIndex || 1;
-                
                 img.style.transform = `translate(${partInfo.x}px, ${partInfo.y}px)`;
-                
                 rigContainer.appendChild(img);
             }
         }
 
-        // 4. الحدث عند تغيير الاختيار
         document.getElementById('characterSelect').addEventListener('change', (e) => {
             const selectedIndex = e.target.value;
             if (charactersData[selectedIndex]) {
@@ -152,7 +123,8 @@
             }
         });
 
-        loadCharacterLibrary();
+        // تشغيل العرض فور فتح الصفحة
+        renderCharacter(charactersData[0]);
     </script>
 
 </body>
