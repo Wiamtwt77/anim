@@ -96,10 +96,10 @@
     <script>
         let charactersData = [];
 
-        // 1. تحميل ملف المكتبة (list.json) عند فتح الصفحة
+        // 1. تحميل ملف المكتبة مع منع الكاش عبر Date.now()
         async function loadCharacterLibrary() {
             try {
-                const response = await fetch('./list.json');
+                const response = await fetch('./list.json?t=' + Date.now());
                 if (!response.ok) throw new Error('فشل في جلب ملف المكتبة list.json');
                 
                 charactersData = await response.json();
@@ -140,7 +140,7 @@
                 img.className = 'body-part';
                 img.style.zIndex = partInfo.zIndex || 1;
                 
-                // تطبيق الإحداثيات المخصصة لكل جزء
+                // تطبيق الإحداثيات المضبوطة لكل جزء
                 img.style.transform = `translate(${partInfo.x}px, ${partInfo.y}px)`;
                 
                 rigContainer.appendChild(img);
