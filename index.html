@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>استوديو تحريك الشخصيات</title>
+    <title>استوديو تحريك الشخصيات - المعايرة الحية</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -17,31 +17,17 @@
             align-items: center;
             min-height: 100vh;
         }
-        h1 { margin-bottom: 10px; font-size: 22px; color: #4CAF50; }
+        h1 { margin-bottom: 10px; font-size: 20px; color: #4CAF50; }
         
-        .library-bar {
-            background: #2a2a2a;
-            padding: 15px 25px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        .container {
             display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        select {
-            padding: 8px 15px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #444;
-            background: #333;
-            color: #fff;
-            cursor: pointer;
+            gap: 20px;
+            align-items: flex-start;
         }
 
         .stage {
-            width: 400px;
-            height: 500px;
+            width: 350px;
+            height: 450px;
             background: #252525;
             border: 2px dashed #444;
             border-radius: 12px;
@@ -68,55 +54,137 @@
             user-select: none;
             pointer-events: none;
         }
+
+        /* لوحة التحكم الجانبية لتعديل الإحداثيات مباشرة */
+        .controls-panel {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            width: 320px;
+            max-height: 450px;
+            overflow-y: auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .part-control {
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #444;
+        }
+        .part-control label {
+            display: block;
+            font-size: 13px;
+            color: #4CAF50;
+            margin-bottom: 4px;
+        }
+        .inputs-row {
+            display: flex;
+            gap: 8px;
+            font-size: 12px;
+        }
+        .inputs-row div { flex: 1; }
+        .inputs-row input {
+            width: 100%;
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 4px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .output-box {
+            margin-top: 15px;
+            background: #111;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #00ffcc;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
 
-    <h1>مكتبة الشخصيات الجاهزة</h1>
+    <h1>استوديو المعايرة الحية لأجزاء الشخصية</h1>
     
-    <div class="library-bar">
-        <label for="characterSelect">اختر شخصية:</label>
-        <select id="characterSelect">
-            <option value="0">الشخصية الأساسية (الافتراضية)</option>
-        </select>
-    </div>
+    <div class="container">
+        <!-- مساحة العرض -->
+        <div class="stage">
+            <div class="character-rig" id="characterRig"></div>
+        </div>
 
-    <div class="stage">
-        <div class="character-rig" id="characterRig"></div>
+        <!-- لوحة التحكم الحية -->
+        <div class="controls-panel" id="controlsPanel">
+            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b;">عُمّر أو عدّل القيم هنا:</div>
+            <div id="slidersContainer"></div>
+            <div class="output-box" id="outputJson"></div>
+        </div>
     </div>
 
     <script>
-        const charactersData = [
-            {
-                id: "hero_mascot",
-                name: "الشخصية الأساسية (الافتراضية)",
-                parts: {
-                    torso:      { src: "./res/torso.png",      width: 90,  x: -45,  y: -60,  zIndex: 2 },
-                    head:       { src: "./res/head.png",       width: 100, x: -50,  y: -165, zIndex: 3 },
-                    right_arm:  { src: "./res/right_arm.png",  width: 32,  x: -72,  y: -50,  zIndex: 1 },
-                    left_arm:   { src: "./res/left_arm.png",   width: 32,  x: 40,   y: -50,  zIndex: 1 },
-                    right_leg:  { src: "./res/right_leg.png",  width: 36,  x: -38,  y: 75,   zIndex: 1 },
-                    left_leg:   { src: "./res/left_leg.png",   width: 36,  x: 2,    y: 75,   zIndex: 1 }
-                }
+        // هيكل البيانات القابل للتعديل الفوري
+        let currentCharacter = {
+            id: "hero_mascot",
+            name: "الشخصية الأساسية",
+            parts: {
+                torso:      { src: "./res/torso.png",      width: 90,  x: 0,   y: -30,  zIndex: 2 },
+                head:       { src: "./res/head.png",       width: 100, x: 0,   y: -140, zIndex: 3 },
+                right_arm:  { src: "./res/right_arm.png",  width: 32,  x: -45, y: -40,  zIndex: 1 },
+                left_arm:   { src: "./res/left_arm.png",   width: 32,  x: 45,  y: -40,  zIndex: 1 },
+                right_leg:  { src: "./res/right_leg.png",  width: 35,  x: -20, y: 50,   zIndex: 1 },
+                left_leg:   { src: "./res/left_leg.png",   width: 35,  x: 20,  y: 50,   zIndex: 1 }
             }
-        ];
+        };
 
-        function renderCharacter(character) {
-            const rigContainer = document.getElementById('characterRig');
-            rigContainer.innerHTML = ''; 
+        const rigContainer = document.getElementById('characterRig');
+        const slidersContainer = document.getElementById('slidersContainer');
+        const outputJson = document.getElementById('outputJson');
 
-            for (const [partName, partInfo] of Object.entries(character.parts)) {
+        function render() {
+            rigContainer.innerHTML = '';
+            for (const [partName, info] of Object.entries(currentCharacter.parts)) {
+                // رسم الصورة
                 const img = document.createElement('img');
-                img.src = partInfo.src;
+                img.src = info.src;
                 img.className = 'body-part';
-                img.style.width = partInfo.width + 'px';
-                img.style.zIndex = partInfo.zIndex || 1;
-                img.style.transform = `translate(${partInfo.x}px, ${partInfo.y}px)`;
+                img.style.width = info.width + 'px';
+                img.style.zIndex = info.zIndex;
+                img.style.transform = `translate(${info.x}px, ${info.y}px)`;
                 rigContainer.appendChild(img);
             }
+            outputJson.textContent = JSON.stringify(currentCharacter.parts, null, 2);
         }
 
-        renderCharacter(charactersData[0]);
+        function buildControls() {
+            slidersContainer.innerHTML = '';
+            for (const [partName, info] of Object.entries(currentCharacter.parts)) {
+                const div = document.createElement('div');
+                div.className = 'part-control';
+                div.innerHTML = `
+                    <label>${partName}</label>
+                    <div class="inputs-row">
+                        <div>عرض: <input type="number" value="${info.width}" data-part="${partName}" data-prop="width"></div>
+                        <div>X: <input type="number" value="${info.x}" data-part="${partName}" data-prop="x"></div>
+                        <div>Y: <input type="number" value="${info.y}" data-part="${partName}" data-prop="y"></div>
+                    </div>
+                `;
+                slidersContainer.appendChild(div);
+            }
+
+            // الاستماع لتغييرات المدخلات بشكل فوري
+            slidersContainer.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const part = e.target.dataset.part;
+                    const prop = e.target.dataset.prop;
+                    currentCharacter.parts[part][prop] = parseFloat(e.target.value) || 0;
+                    render();
+                });
+            });
+        }
+
+        buildControls();
+        render();
     </script>
 
 </body>
