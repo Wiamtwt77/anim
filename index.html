@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Upload Studio - النسخة التجريبية المستقرة</title>
+    <title>Twencraft Upload Studio - نظام المفاصل الدقيق</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -20,7 +20,7 @@
         .app-container {
             display: flex;
             gap: 20px;
-            max-width: 950px;
+            max-width: 980px;
             width: 100%;
             justify-content: center;
             flex-wrap: wrap;
@@ -29,9 +29,9 @@
             background: #2a2a2a;
             padding: 15px;
             border-radius: 8px;
-            width: 320px;
+            width: 340px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            max-height: 520px;
+            max-height: 550px;
             overflow-y: auto;
         }
         .stage-container {
@@ -80,7 +80,6 @@
             justify-content: center;
             align-items: center;
         }
-        /* عظمة المفصل الثابتة في مكانها */
         .bone-joint {
             position: absolute;
             width: 0;
@@ -89,41 +88,48 @@
             justify-content: center;
             align-items: center;
         }
-        /* الصورة التي تدور داخل مفصلها الثابت */
         .body-part {
             position: absolute;
             user-select: none;
             pointer-events: none;
         }
         .bone-control {
-            margin-bottom: 12px;
-            font-size: 13px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+            font-size: 12px;
         }
         .bone-control label {
             display: flex;
             justify-content: space-between;
             color: #4CAF50;
-            margin-bottom: 4px;
+            font-weight: bold;
+            margin-bottom: 5px;
         }
+        .control-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+            align-items: center;
+        }
+        .control-row span { min-width: 50px; color: #aaa; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <!-- لوحة تحريك العظام -->
+        <!-- لوحة التحكم المتقدمة للعظام والمفاصل -->
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">لوحة تحكم نظام العظام</div>
+            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">معايرة المفاصل والدوران</div>
             <div id="bonesControls"></div>
         </div>
 
         <div class="stage-container">
-            <!-- مكتبة الشخصيات -->
             <div class="library-bar">
                 <label for="characterSelect" style="white-space: nowrap;">المكتبة:</label>
                 <select id="characterSelect"></select>
             </div>
 
-            <!-- مساحة المعاينة -->
             <div class="stage">
                 <div class="character-rig" id="characterRig"></div>
             </div>
@@ -136,24 +142,26 @@
                 id: "hero_mascot",
                 name: "الشخصية الأساسية (الافتراضية)",
                 parts: {
-                    torso:      { src: "./res/torso.png",      width: 74, x: 1,   y: -37,  zIndex: 2, origin: "center center" },
-                    head:       { src: "./res/head.png",       width: 88, x: 0,   y: -140, zIndex: 3, origin: "bottom center" },
-                    right_arm:  { src: "./res/right_arm.png",  width: 32, x: 34,  y: -40,  zIndex: 1, origin: "top center" },
-                    left_arm:   { src: "./res/left_arm.png",   width: 32, x: -34, y: -43,  zIndex: 1, origin: "top center" },
-                    right_leg:  { src: "./res/right_leg.png",  width: 32, x: 22,  y: 50,   zIndex: 1, origin: "top center" },
-                    left_leg:   { src: "./res/left_leg.png",   width: 25, x: -22, y: 50,   zIndex: 1, origin: "top center" }
+                    torso:      { src: "./res/torso.png",      width: 74, x: 1,   y: -37,  zIndex: 2, rotX: 50, rotY: 50 },
+                    head:       { src: "./res/head.png",       width: 88, x: 0,   y: -140, zIndex: 3, rotX: 50, rotY: 100 },
+                    right_arm:  { src: "./res/right_arm.png",  width: 32, x: 34,  y: -40,  zIndex: 1, rotX: 50, rotY: 10 },
+                    left_arm:   { src: "./res/left_arm.png",   width: 32, x: -34, y: -43,  zIndex: 1, rotX: 50, rotY: 10 },
+                    right_leg:  { src: "./res/right_leg.png",  width: 32, x: 22,  y: 50,   zIndex: 1, rotX: 50, rotY: 10 },
+                    left_leg:   { src: "./res/left_leg.png",   width: 25, x: -22, y: 50,   zIndex: 1, rotX: 50, rotY: 10 }
                 }
             }
         ];
 
         let activeCharacterIndex = 0;
-        let boneRotations = {
-            head: 0,
-            right_arm: 0,
-            left_arm: 0,
-            right_leg: 0,
-            left_leg: 0,
-            torso: 0
+        
+        // حفظ بيانات الدوران وموقع نقطة الارتكاز لكل عظمة
+        let boneData = {
+            head:      { rot: 0, originX: 50, originY: 100 },
+            right_arm: { rot: 0, originX: 50, originY: 10 },
+            left_arm:  { rot: 0, originX: 50, originY: 10 },
+            right_leg: { rot: 0, originX: 50, originY: 10 },
+            left_leg:  { rot: 0, originX: 50, originY: 10 },
+            torso:     { rot: 0, originX: 50, originY: 50 }
         };
 
         const rigContainer = document.getElementById('characterRig');
@@ -175,21 +183,19 @@
             rigContainer.innerHTML = '';
 
             for (const [partName, info] of Object.entries(char.parts)) {
-                // 1. حاوية المفصل (تتولى التموضع الثابت فقط)
                 const jointDiv = document.createElement('div');
                 jointDiv.className = 'bone-joint';
                 jointDiv.style.zIndex = info.zIndex;
                 jointDiv.style.transform = `translate(${info.x}px, ${info.y}px)`;
 
-                // 2. صورة العضو (تتولى نقطة الارتكاز والدوران حصرياً)
                 const img = document.createElement('img');
                 img.src = info.src;
                 img.className = 'body-part';
                 img.style.width = info.width + 'px';
-                img.style.transformOrigin = info.origin || 'top center';
                 
-                const rot = boneRotations[partName] || 0;
-                img.style.transform = `rotate(${rot}deg)`;
+                const bData = boneData[partName] || { rot: 0, originX: 50, originY: 0 };
+                img.style.transformOrigin = `${bData.originX}% ${bData.originY}%`;
+                img.style.transform = `rotate(${bData.rot}deg)`;
                 
                 jointDiv.appendChild(img);
                 rigContainer.appendChild(jointDiv);
@@ -201,12 +207,23 @@
             const char = charactersData[activeCharacterIndex];
 
             for (const partName of Object.keys(char.parts)) {
-                const currentRot = boneRotations[partName] || 0;
+                const bData = boneData[partName];
                 const div = document.createElement('div');
                 div.className = 'bone-control';
                 div.innerHTML = `
-                    <label><span>عظمة: ${partName}</span><span id="val_${partName}">${currentRot}°</span></label>
-                    <input type="range" min="-90" max="90" value="${currentRot}" data-part="${partName}">
+                    <label><span>عظمة: ${partName}</span></label>
+                    <div class="control-row">
+                        <span>دوران: <b id="rot_val_${partName}">${bData.rot}°</b></span>
+                        <input type="range" min="-90" max="90" value="${bData.rot}" data-part="${partName}" data-type="rot">
+                    </div>
+                    <div class="control-row">
+                        <span>محور X: <b id="ox_val_${partName}">${bData.originX}%</b></span>
+                        <input type="range" min="0" max="100" value="${bData.originX}" data-part="${partName}" data-type="originX">
+                    </div>
+                    <div class="control-row">
+                        <span>محور Y: <b id="oy_val_${partName}">${bData.originY}%</b></span>
+                        <input type="range" min="0" max="100" value="${bData.originY}" data-part="${partName}" data-type="originY">
+                    </div>
                 `;
                 bonesControls.appendChild(div);
             }
@@ -214,9 +231,12 @@
             bonesControls.querySelectorAll('input[type="range"]').forEach(slider => {
                 slider.addEventListener('input', (e) => {
                     const part = e.target.dataset.part;
+                    const type = e.target.dataset.type;
                     const val = parseInt(e.target.value);
-                    boneRotations[part] = val;
-                    document.getElementById(`val_${part}`).textContent = val + '°';
+                    
+                    boneData[part][type] = val;
+                    document.getElementById(`${type === 'rot' ? 'rot_val' : type === 'originX' ? 'ox_val' : 'oy_val'}_${part}`).textContent = val + (type === 'rot' ? '°' : '%');
+                    
                     renderCharacter();
                 });
             });
@@ -224,7 +244,6 @@
 
         characterSelect.addEventListener('change', (e) => {
             activeCharacterIndex = parseInt(e.target.value);
-            Object.keys(boneRotations).forEach(k => boneRotations[k] = 0);
             buildBoneControls();
             renderCharacter();
         });
