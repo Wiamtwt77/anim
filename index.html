@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Upload Studio - النسخة الهرمية المستقرة نهائياً</title>
+    <title>Twencraft Upload Studio - المجسم المتكامل المستقر</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -77,7 +77,6 @@
             width: 0;
             height: 0;
         }
-        /* عقدة المفصل العظمي بنقطة صفرية دقيقة */
         .bone-node {
             position: absolute;
             width: 0;
@@ -106,9 +105,9 @@
 <body>
 
     <div class="app-container">
-        <!-- لوحة تحكم العظام الهرمية -->
+        <!-- لوحة تحكم العظام الهرمية لجميع أجزاء الجسم -->
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">نظام المفاصل الهرمي (محور دقيق)</div>
+            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">نظام المجسم المتكامل (Parent-Child)</div>
             <div id="bonesControls"></div>
         </div>
 
@@ -128,14 +127,14 @@
         const charactersData = [
             {
                 id: "hero_mascot",
-                name: "الشخصية الأساسية (محور مضبوط)",
+                name: "الشخصية الأساسية (مجسم متكامل)",
                 rootBone: "torso",
                 bones: {
                     torso: {
                         src: "./res/torso.png",
                         width: 74,
                         x: 0,
-                        y: -32,
+                        y: 0,
                         zIndex: 2,
                         origin: "center center",
                         minRot: -20, maxRot: 20,
@@ -145,7 +144,7 @@
                         src: "./res/head.png",
                         width: 88,
                         x: 0,
-                        y: -97,
+                        y: -42, // التموضع الصحيح عند أعلى الجذع (منطقة العنق)
                         zIndex: 3,
                         origin: "bottom center",
                         minRot: -45, maxRot: 45,
@@ -155,7 +154,7 @@
                         src: "./res/right_arm.png",
                         width: 32,
                         x: 30,
-                        y: -11,
+                        y: -11, // مفصل الكتف الأيمن
                         zIndex: 1,
                         origin: "top center",
                         minRot: -90, maxRot: 90,
@@ -165,7 +164,7 @@
                         src: "./res/left_arm.png",
                         width: 32,
                         x: -33,
-                        y: -11,
+                        y: -11, // مفصل الكتف الأيسر
                         zIndex: 1,
                         origin: "top center",
                         minRot: -90, maxRot: 90,
@@ -174,8 +173,8 @@
                     right_leg: {
                         src: "./res/right_leg.png",
                         width: 32,
-                        x: 25,
-                        y: 92,
+                        x: 18,
+                        y: 38, // التموضع الصحيح عند مفصل الورك الأيمن أسفل الجذع
                         zIndex: 1,
                         origin: "top center",
                         minRot: -45, maxRot: 45,
@@ -185,7 +184,7 @@
                         src: "./res/left_leg.png",
                         width: 25,
                         x: -18,
-                        y: 82,
+                        y: 38, // التموضع الصحيح عند مفصل الورك الأيسر أسفل الجذع
                         zIndex: 1,
                         origin: "top center",
                         minRot: -45, maxRot: 45,
@@ -235,7 +234,6 @@
             
             const rot = boneRotations[boneName] || 0;
 
-            // ضبط التموضع بدقة مطلقة بناءً على نقطة الأصل لمنع أي انفصال أثناء الدوران
             if (bone.origin === 'top center') {
                 img.style.left = '50%';
                 img.style.top = '0';
@@ -244,7 +242,7 @@
                 img.style.left = '50%';
                 img.style.bottom = '0';
                 img.style.transform = `translateX(-50%) rotate(${rot}deg)`;
-            } else { // center center
+            } else {
                 img.style.left = '50%';
                 img.style.top = '50%';
                 img.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
