@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Upload Studio - النسخة النهائية المستقرة</title>
+    <title>Twencraft Upload Studio - النسخة الهرمية المستقرة نهائياً</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -76,17 +76,12 @@
             position: relative;
             width: 0;
             height: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
+        /* عقدة المفصل العظمي بنقطة صفرية دقيقة */
         .bone-node {
             position: absolute;
             width: 0;
             height: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
         .body-part {
             position: absolute;
@@ -113,7 +108,7 @@
     <div class="app-container">
         <!-- لوحة تحكم العظام الهرمية -->
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">نظام المفاصل الهرمي المستقر</div>
+            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">نظام المفاصل الهرمي (محور دقيق)</div>
             <div id="bonesControls"></div>
         </div>
 
@@ -130,11 +125,10 @@
     </div>
 
     <script>
-        // إدخال المقاييس الدقيقة المستخرجة بعد المعايرة
         const charactersData = [
             {
                 id: "hero_mascot",
-                name: "الشخصية الأساسية (المقاييس المضبوطة)",
+                name: "الشخصية الأساسية (محور مضبوط)",
                 rootBone: "torso",
                 bones: {
                     torso: {
@@ -240,7 +234,21 @@
             img.style.transformOrigin = bone.origin;
             
             const rot = boneRotations[boneName] || 0;
-            img.style.transform = `rotate(${rot}deg)`;
+
+            // ضبط التموضع بدقة مطلقة بناءً على نقطة الأصل لمنع أي انفصال أثناء الدوران
+            if (bone.origin === 'top center') {
+                img.style.left = '50%';
+                img.style.top = '0';
+                img.style.transform = `translateX(-50%) rotate(${rot}deg)`;
+            } else if (bone.origin === 'bottom center') {
+                img.style.left = '50%';
+                img.style.bottom = '0';
+                img.style.transform = `translateX(-50%) rotate(${rot}deg)`;
+            } else { // center center
+                img.style.left = '50%';
+                img.style.top = '50%';
+                img.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
+            }
             
             nodeDiv.appendChild(img);
 
