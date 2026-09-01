@@ -1,175 +1,1072 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>استوديو تحريك الشخصيات - Character Studio</title>
-    <style>
-        :root {
-            --bg-color: #1e1e24;
-            --panel-bg: #2d2d38;
-            --accent-color: #ff6b81;
-            --text-color: #f1f2f6;
-            --border-radius: 12px;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-        header {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            color: var(--accent-color);
-        }
-        .main-container {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            max-width: 1000px;
-            background: var(--panel-bg);
-            padding: 20px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-        }
-        .canvas-area {
-            flex: 1;
-            background: #ffffff;
-            border-radius: var(--border-radius);
-            position: relative;
-            height: 500px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-        }
-        /* حاوية أجزاء الشخصية */
-        #character-container {
-            position: relative;
-            width: 300px;
-            height: 400px;
-        }
-        .char-part {
-            position: absolute;
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            user-select: none;
-            pointer-events: none;
-            left: 0;
-            top: 0;
-        }
-        /* ترتيب الطبقات (Z-Index) */
-        #part-chest { z-index: 1; }
-        #part-head { z-index: 2; }
-        #part-hair { z-index: 3; }
+  <meta charset="UTF-8">
+  <title>Twencraft Studio - Cloud & Resource Library</title>
+  <!-- مكتبة Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0a0b0e; color: #e2e8f0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        .sidebar {
-            width: 300px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .panel {
-            background: rgba(255,255,255,0.05);
-            padding: 15px;
-            border-radius: var(--border-radius);
-        }
-        .panel h3 {
-            margin-top: 0;
-            font-size: 1.1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 8px;
-        }
-        .part-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 10px;
-            margin-bottom: 8px;
-            background: rgba(255,255,258,0.08);
-            border-radius: 8px;
-            font-size: 0.95rem;
-        }
-        .status {
-            font-size: 0.85rem;
-            color: #2ed573;
-        }
-    </style>
+    header { background: #14161f; padding: 8px 16px; border-bottom: 1px solid #1f2333; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; z-index: 10; }
+    .tool-group { display: flex; gap: 6px; align-items: center; }
+    
+    button { background: #1f2333; border: 1px solid #30364f; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+    button:hover { background: #2c324a; transform: translateY(-1px); }
+    button.active { background: #3b82f6; border-color: #60a5fa; color: #fff; box-shadow: 0 0 10px rgba(59,130,246,0.4); }
+    button.accent { background: #10b981; border-color: #34d399; }
+    button.danger { background: #ef4444; border-color: #f87171; }
+    input[type="number"], input[type="text"], input[type="password"], select { background: #0e1017; border: 1px solid #30364f; color: #fff; padding: 5px; border-radius: 4px; text-align: center; font-size: 12px; }
+
+    .workspace { flex: 1; display: flex; position: relative; overflow: hidden; }
+    .canvas-container { flex: 1; background: #050608; display: flex; justify-content: center; align-items: center; position: relative; overflow: auto; padding: 10px; }
+    canvas { background: #0e1017; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.9); cursor: crosshair; }
+
+    .sidebar { width: 340px; background: #14161f; border-left: 1px solid #1f2333; display: flex; flex-direction: column; gap: 8px; padding: 10px; overflow-y: auto; z-index: 20; }
+    .sidebar h4 { font-size: 12px; color: #60a5fa; border-bottom: 1px solid #1f2333; padding-bottom: 4px; margin-top: 4px; }
+    .field { display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-bottom: 4px; }
+    
+    .scene-card { background: #1a1e2c; padding: 8px; border-radius: 6px; border: 1px solid #30364f; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; cursor: pointer; }
+    .scene-card.active { border-color: #3b82f6; background: #22283d; }
+
+    .library-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 120px; overflow-y: auto; background: #0e1017; padding: 6px; border-radius: 6px; border: 1px solid #30364f; }
+    .lib-item { background: #1a1e2c; border: 1px solid #30364f; border-radius: 4px; padding: 4px; text-align: center; cursor: pointer; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .lib-item:hover { border-color: #3b82f6; background: #22283d; }
+    .lib-item img { width: 32px; height: 32px; object-fit: contain; background: #000; border-radius: 3px; }
+
+    .director-panel { height: 210px; background: #14161f; border-top: 1px solid #1f2333; padding: 10px 16px; display: flex; flex-direction: column; gap: 6px; z-index: 10; }
+    .timeline-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    
+    .tracks-container { position: relative; display: flex; flex-direction: column; gap: 4px; flex: 1; margin-top: 4px; overflow-x: auto; }
+    .track-label { font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; }
+    .track { position: relative; height: 30px; background: #0a0b0e; border: 1px solid #1f2333; border-radius: 4px; cursor: pointer; overflow: hidden; width: 100%; }
+    .scrubber { position: absolute; top: 0; width: 2px; height: 100%; background: #ef4444; pointer-events: none; z-index: 20; box-shadow: 0 0 6px #ef4444; }
+    
+    .kf-node { position: absolute; top: 50%; width: 9px; height: 9px; background: #3b82f6; border-radius: 50%; transform: translate(-50%, -50%); z-index: 5; }
+    .nle-clip { position: absolute; top: 2px; height: 24px; border-radius: 4px; cursor: grab; z-index: 6; display: flex; align-items: center; padding: 0 6px; font-size: 10px; color: #fff; font-weight: bold; overflow: hidden; white-space: nowrap; border: 1px solid rgba(255,255,255,0.2); }
+    .audio-clip-item { background: rgba(239, 68, 68, 0.6); border-color: #ef4444; }
+    .expr-clip-item { background: rgba(16, 185, 129, 0.6); border-color: #10b981; }
+
+    .exp-box { background: #1a1e2c; padding: 8px; border-radius: 6px; border: 1px solid #30364f; display: flex; flex-direction: column; gap: 6px; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-box { background: #14161f; border: 1px solid #30364f; padding: 20px; border-radius: 8px; width: 300px; display: flex; flex-direction: column; gap: 10px; }
+    .modal-box h3 { color: #60a5fa; font-size: 15px; margin-bottom: 5px; }
+  </style>
 </head>
 <body>
 
-    <header>
-        <h1>استوديو تحريك الشخصيات الافتراضية</h1>
-        <p>القاعدة الأساسية لقراءة أجزاء الشخصية من ملف list.json</p>
-    </header>
-
-    <div class="main-container">
-        <!-- منطقة عرض الشخصية -->
-        <div class="canvas-area">
-            <div id="character-container">
-                <!-- ستُحقن صور الأجزاء هنا برمجياً -->
-            </div>
-        </div>
-
-        <!-- الشريط الجانبي لعرض الأجزاء -->
-        <div class="sidebar">
-            <div class="panel">
-                <h3>الأجزاء المحملة</h3>
-                <div id="parts-list-ui">
-                    <!-- سيتم تحديث القائمة تلقائياً -->
-                </div>
-            </div>
-        </div>
+  <header>
+    <div class="tool-group">
+      <button id="btn-mode-pose" class="active" onclick="setMode('pose')">🖐️ تحريك (Pose)</button>
+      <button id="btn-mode-draw" onclick="setMode('draw')">🦴 رسم العظام</button>
+      <button onclick="toggleBoneVisibility()">👁️ إخفاء الهيكل</button>
+    </div>
+    
+    <div class="tool-group">
+      <span style="font-size:11px;">المقاس:</span>
+      <input type="number" id="canvas-width-input" value="800" step="50" style="width:50px;" onchange="resizeCanvas()">
+      <span style="font-size:11px;">×</span>
+      <input type="number" id="canvas-height-input" value="600" step="50" style="width:50px;" onchange="resizeCanvas()">
+      <button onclick="document.getElementById('bg-file').click()">🖼️ خلفية</button>
+      <input type="file" id="bg-file" accept="image/*" style="display:none;" onchange="uploadSceneBackground(event)">
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const container = document.getElementById("character-container");
-            const partsListUi = document.getElementById("parts-list-ui");
+    <div class="tool-group">
+      <button class="accent" onclick="cloudSaveProject()">☁️ حفظ بالسحاب</button>
+      <button id="auth-btn" onclick="openAuthModal()" style="background:#0284c7;">👤 تسجيل الدخول</button>
+      <button class="danger" onclick="deleteSelectedBone()">🗑️ حذف عظمة</button>
+    </div>
+  </header>
 
-            // جلب بيانات الشخصية عبر list.json
-            fetch('./list.json')
-                .then(response => {
-                    if (!response.ok) throw new Error("تعذر تحميل ملف list.json");
-                    return response.json();
-                })
-                .then(parts => {
-                    partsListUi.innerHTML = "";
-                    container.innerHTML = "";
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h3>حساب المستخدم السحابي</h3>
+      <input type="text" id="auth-email" placeholder="البريد الإلكتروني">
+      <input type="password" id="auth-password" placeholder="كلمة المرور">
+      <div style="display:flex; gap:6px; margin-top:5px;">
+        <button onclick="supabaseSignIn()" class="accent" style="flex:1;">دخول</button>
+        <button onclick="supabaseSignUp()" style="flex:1; background:#334155;">إنشاء حساب</button>
+      </div>
+      <button onclick="closeAuthModal()" style="background:transparent; border:none; color:#94a3b8; margin-top:5px; cursor:pointer;">إغلاق</button>
+    </div>
+  </div>
 
-                    parts.forEach(part => {
-                        // 1. بناء عنصر الصورة داخل مساحة العمل
-                        const img = document.createElement("img");
-                        img.src = part.src;
-                        img.alt = part.n;
-                        img.id = `part-${part.id}`;
-                        img.className = "char-part";
-                        container.appendChild(img);
+  <div class="workspace">
+    <div class="canvas-container">
+      <canvas id="stage" width="800" height="600"></canvas>
+    </div>
 
-                        // 2. إظهار العنصر في القائمة الجانبية كدليل على نجاح التحميل
-                        const itemUi = document.createElement("div");
-                        itemUi.className = "part-item";
-                        itemUi.innerHTML = `<span>${part.n} (${part.id})</span> <span class="status">تم التحميل ✓</span>`;
-                        partsListUi.appendChild(itemUi);
-                    });
-                })
-                .catch(error => {
-                    console.error("خطأ:", error);
-                    partsListUi.innerHTML = `<p style="color: #ff4757; font-size: 0.85rem;">خطأ: تأكد من صحة مسارات الصور وملف list.json.</p>`;
+    <div class="sidebar">
+      <h4>🎬 تتابع المشاهد</h4>
+      <div id="scenes-list"></div>
+      <button onclick="addNewScene()" class="accent" style="width:100%;">➕ إضافة مشهد جديد</button>
+
+      <div id="selected-bone-panel" style="display:none; flex-direction:column; gap:8px; margin-top:8px;">
+        <h4 id="panel-title">خصائص العظمة والسبرايت</h4>
+        
+        <div class="field"><label>العظمة الأب (Parent):</label>
+          <select id="bone-parent-select" onchange="changeBoneParent()"></select>
+        </div>
+
+        <div class="field"><label>نقطة الارتباط بالأب:</label>
+          <select id="bone-attach-select" onchange="changeBoneAttachment()">
+            <option value="end">نهاية الأب (الرأس/الطرف العلوي)</option>
+            <option value="start">بداية الأب (الجذر/القاعدة)</option>
+          </select>
+        </div>
+
+        <button onclick="document.getElementById('bone-img-file').click()">📁 رفع صورة أساسية (Sprite)</button>
+        <input type="file" id="bone-img-file" accept="image/*" style="display:none;" onchange="uploadBoneImage(event)">
+
+        <h4>🗂️ مكتبة الموارد (Resources)</h4>
+        <div style="display:flex; gap:4px;">
+          <input type="text" id="lib-item-title" placeholder="اسم المورد (رأس، ذراع..)" style="flex:1;">
+          <button onclick="document.getElementById('lib-file').click()" class="accent" style="padding:4px 8px;">رفع للمكتبة</button>
+          <input type="file" id="lib-file" accept="image/*" style="display:none;" onchange="uploadToResourceLibrary(event)">
+        </div>
+        <div class="library-grid" id="resource-library-grid"></div>
+
+        <h4>😊 مكتبة التعابير المتتابعة</h4>
+        <div class="exp-box">
+          <input type="text" id="new-exp-name" placeholder="اسم التعبير (مثال: غضب، كلام)">
+          <button onclick="document.getElementById('exp-file').click()" style="background:#0284c7;">➕ رفع إطارات التعبير</button>
+          <input type="file" id="exp-file" accept="image/*" multiple style="display:none;" onchange="createNewExpression(event)">
+          
+          <div style="margin-top: 4px;">
+            <label style="font-size:10px; color:#a78bfa;">إضافة تعبير للمشهد:</label>
+            <div style="display:flex; gap:4px; margin-top:3px;">
+              <select id="select-clip-expr" style="flex:1;"></select>
+              <input type="number" id="clip-duration-input" value="30" style="width:45px;" title="المدة بالأطر">
+              <button onclick="addExpressionClip()" class="accent" style="padding:3px 6px;">إضافة</button>
+            </div>
+          </div>
+        </div>
+
+        <h4>📐 الأبعاد، الإزاحة ودوران السبرايت</h4>
+        <div class="field"><label>العرض / الطول:</label>
+          <div style="display:flex; gap:3px;">
+            <input type="number" id="texW" style="width:55px;" oninput="updateTex()">
+            <input type="number" id="texH" style="width:55px;" oninput="updateTex()">
+          </div>
+        </div>
+        <div class="field"><label>إزاحة X / Y:</label>
+          <div style="display:flex; gap:3px;">
+            <input type="number" id="texOffX" style="width:45px;" oninput="updateTex()">
+            <input type="number" id="texOffY" style="width:45px;" oninput="updateTex()">
+          </div>
+        </div>
+        <div class="field"><label>زاوية السبرايت:</label>
+          <input type="number" id="texAngle" style="width:60px;" oninput="updateTex()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="director-panel">
+    <div class="timeline-controls">
+      <div class="tool-group">
+        <button id="btn-play" onclick="togglePlay()" class="active" style="width: 85px;">▶ تشغيل</button>
+        <button onclick="saveKeyframe()" class="accent">➕ حفظ لقطة</button>
+        <button onclick="copyKeyframe()">📋 نسخ</button>
+        <button onclick="pasteKeyframe()">📌 لصق</button>
+        <button class="danger" onclick="deleteKeyframe()">🗑️ حذف لقطة</button>
+      </div>
+
+      <div class="tool-group">
+        <span style="font-size:10px; color:#94a3b8;">الحركة:</span>
+        <select id="easing-select" onchange="saveProjectState()">
+          <option value="smooth">ناعم (Smooth)</option>
+          <option value="linear">خطي (Linear)</option>
+          <option value="easeIn">تسارع (Ease In)</option>
+          <option value="easeOut">تباطؤ (Ease Out)</option>
+          <option value="bounce">ارتداد (Bounce)</option>
+        </select>
+        <span style="font-size:10px; color:#94a3b8;">الإطارات:</span>
+        <input type="number" id="max-frames" value="120" min="20" step="10" style="width:50px;" onchange="updateTimelineScale()">
+      </div>
+
+      <div class="tool-group">
+        <button onclick="recordAudioClip()" style="background:#ef4444; font-size:11px;">🎙️ تسجيل صوت</button>
+      </div>
+
+      <span style="font-size: 12px; font-weight:bold;">المشهد: <b id="lbl-scene" style="color:#38bdf8;">1</b> | الإطار: <b id="lbl-frame" style="color:#60a5fa; font-size:14px;">0</b></span>
+    </div>
+    
+    <div class="tracks-container" id="tracks-scroll">
+      <div class="track-label"><span>مسار الإطارات الرئيسية (Animation Keyframes)</span></div>
+      <div class="track" id="main-track" onmousedown="startScrubbing(event)">
+        <div class="scrubber" id="scrubber-line"></div>
+      </div>
+
+      <div class="track-label" style="margin-top:3px;"><span>مسار المقاطع الصوتية</span></div>
+      <div class="track" id="audio-track"></div>
+
+      <div class="track-label" style="margin-top:3px;"><span>مسار التعابير</span></div>
+      <div class="track" id="expr-track"></div>
+    </div>
+  </div>
+
+  <script>
+    // إعدادات اتصال Supabase (آمنة لا تكسر التطبيق إن لم تكتمل)
+    const SUPABASE_URL = 'https://suljseyxbokiuxphuvoo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_DWd_wSZa19_tOTIJBVtAcg_twD7APcf';
+    let supabaseClient = null;
+    try {
+      if (SUPABASE_URL && SUPABASE_URL !== 'https://suljseyxbokiuxphuvoo.supabase.co') {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch(err) {
+      console.warn("Supabase not configured yet.");
+    }
+
+    let currentUser = null;
+    let cloudResources = [];
+
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
+
+    let mode = 'pose';
+    let showBones = true;
+    
+    let scenes = [
+      { id: 'scene_1', title: 'المشهد الأول 🎬', duration: 120, bgImgSrc: null, bones: [], keyframes: [], expressionClips: [], audioClips: [] }
+    ];
+    let currentSceneId = 'scene_1';
+
+    let selectedBoneId = null;
+    let currentFrame = 0;
+    let maxFrames = 120;
+    let playSpeed = 30;
+    let lastTimestamp = 0;
+    let isPlaying = false;
+    let copiedKeyframeData = null;
+
+    let isInteracting = false;
+    let isScrubbing = false;
+    let drawStartPos = null;
+    let autoParentId = null;
+    let mousePos = { x: 0, y: 0 };
+    let activeDrag = null;
+    let draggingAudioId = null;
+    let audioDragStartX = 0;
+    let draggingExprClipId = null;
+    let exprDragStartX = 0;
+
+    class Bone {
+      constructor(id, parentId, x, y, length, angle) {
+        this.id = id; this.parentId = parentId;
+        this.x = x; this.y = y; this.length = length; this.angle = angle;
+        this.worldX = 0; this.worldY = 0; this.worldAngle = 0; this._updated = false;
+        this.attachTo = 'end'; 
+        this.baseImage = null;
+        this.imgW = 50; this.imgH = 50;
+        this.imgOffX = 0; this.imgOffY = 0;
+        this.imgAngle = 630;
+        this.expressions = {};
+        this.activeExpression = "default";
+      }
+    }
+
+    function getCurrentScene() {
+      return scenes.find(s => s.id === currentSceneId) || scenes[0];
+    }
+
+    async function checkUserSession() {
+      if (!supabaseClient) return;
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        currentUser = session.user;
+        document.getElementById('auth-btn').innerText = `👤 ${currentUser.email.split('@')[0]}`;
+        cloudLoadProjects();
+        loadResourceLibrary();
+      }
+    }
+
+    function openAuthModal() { document.getElementById('auth-modal').style.display = 'flex'; }
+    function closeAuthModal() { document.getElementById('auth-modal').style.display = 'none'; }
+
+    async function supabaseSignUp() {
+      if (!supabaseClient) return alert("يرجى إعداد بيانات Supabase في الكود أولاً!");
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) alert(error.message);
+      else { alert("تم إرسال بريد التفعيل أو التسجيل بنجاح!"); closeAuthModal(); }
+    }
+
+    async function supabaseSignIn() {
+      if (!supabaseClient) return alert("يرجى إعداد بيانات Supabase في الكود أولاً!");
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) alert(error.message);
+      else {
+        currentUser = data.user;
+        document.getElementById('auth-btn').innerText = `👤 ${currentUser.email.split('@')[0]}`;
+        closeAuthModal();
+        cloudLoadProjects();
+        loadResourceLibrary();
+        alert("تم تسجيل الدخول بنجاح!");
+      }
+    }
+
+    async function cloudSaveProject() {
+      if (!supabaseClient) return alert("يرجى إعداد بيانات Supabase في الكود أولاً!");
+      if (!currentUser) return alert("يرجى تسجيل الدخول أولاً لحفظ المشروع سحابياً!");
+      const scene = getCurrentScene();
+      const projectPayload = {
+        user_id: currentUser.id,
+        title: scene.title || "مشروع استوديو التحريك",
+        project_data: { scenes, currentSceneId },
+        updated_at: new Date()
+      };
+
+      const { data, error } = await supabaseClient.from('accounts').insert([projectPayload]);
+      if (error) alert("خطأ في الحفظ السحابي: " + error.message);
+      else alert("تم حفظ المشروع في جدول accounts سحابياً بنجاح! ☁️");
+    }
+
+    async function cloudLoadProjects() {
+      if (!supabaseClient || !currentUser) return;
+      const { data, error } = await supabaseClient.from('accounts').select('*').eq('user_id', currentUser.id);
+      if (error) { console.error(error); return; }
+      if (data && data.length > 0) {
+        const latest = data[data.length - 1];
+        if (latest && latest.project_data) {
+          scenes = latest.project_data.scenes || scenes;
+          currentSceneId = latest.project_data.currentSceneId || scenes[0].id;
+          maxFrames = getCurrentScene().duration || 120;
+          document.getElementById('max-frames').value = maxFrames;
+          renderScenesList();
+          updateTimelineScale();
+        }
+      }
+    }
+
+    async function uploadToResourceLibrary(e) {
+      if (!supabaseClient) return alert("يرجى إعداد بيانات Supabase في الكود أولاً!");
+      if (!currentUser) return alert("يجب تسجيل الدخول لرفع موارد للمكتبة!");
+      const file = e.target.files[0];
+      if (!file) return;
+      let title = document.getElementById('lib-item-title').value.trim() || file.name;
+
+      const filePath = `resources/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabaseClient.storage.from('assets').upload(filePath, file);
+      if (uploadError) return alert("خطأ في رفع الملف: " + uploadError.message);
+
+      const { data: urlData } = supabaseClient.storage.from('assets').getPublicUrl(filePath);
+      const publicUrl = urlData.publicUrl;
+
+      const { error: dbError } = await supabaseClient.from('resource_items').insert([{
+        user_id: currentUser.id,
+        title: title,
+        category: 'sprite',
+        file_url: publicUrl
+      }]);
+
+      if (dbError) alert("خطأ في حفظ بيانات المورد: " + dbError.message);
+      else {
+        alert("تم رفع المورد للمكتبة السحابية بنجاح! 🗂️");
+        document.getElementById('lib-item-title').value = '';
+        loadResourceLibrary();
+      }
+    }
+
+    async function loadResourceLibrary() {
+      if (!supabaseClient) return;
+      const { data, error } = await supabaseClient.from('resource_items').select('*');
+      if (error) { console.error(error); return; }
+      cloudResources = data || [];
+      renderResourceLibrary();
+    }
+
+    function renderResourceLibrary() {
+      const grid = document.getElementById('resource-library-grid');
+      grid.innerHTML = '';
+      cloudResources.forEach(res => {
+        const div = document.createElement('div');
+        div.className = 'lib-item';
+        div.innerHTML = `<img src="${res.file_url}" alt=""><span>${res.title}</span>`;
+        div.onclick = () => applyResourceToBone(res.file_url);
+        grid.appendChild(div);
+      });
+    }
+
+    function applyResourceToBone(url) {
+      const scene = getCurrentScene();
+      const b = scene.bones.find(x => x.id === selectedBoneId);
+      if (!b) return alert("اختر عظمة أولاً لتطبيق المورد عليها!");
+      const img = new Image();
+      img.onload = () => {
+        b.baseImage = img;
+        b.imgW = 50;
+        b.imgH = 50;
+        b.imgAngle = 630;
+        syncUI();
+        autoUpdateKeyframe(b);
+        saveProjectState();
+        alert("تم تعيين السبرايت للعظمة بنجاح!");
+      };
+      img.src = url;
+    }
+
+    function saveProjectState() {
+      const scene = getCurrentScene();
+      scene.duration = maxFrames;
+      localStorage.setItem('twencraft_rigid_project', JSON.stringify({ scenes, currentSceneId }));
+    }
+
+    function loadProjectState() {
+      const saved = localStorage.getItem('twencraft_rigid_project');
+      if (!saved) return;
+      try {
+        const data = JSON.parse(saved);
+        if (data.scenes) {
+          scenes = data.scenes.map(sd => ({
+            id: sd.id, title: sd.title, duration: sd.duration || 120,
+            bgImgSrc: sd.bgImgSrc, keyframes: sd.keyframes || [],
+            expressionClips: sd.expressionClips || [], audioClips: sd.audioClips || [],
+            bones: (sd.bones || []).map(bd => {
+              let b = new Bone(bd.id, bd.parentId, bd.x, bd.y, bd.length, bd.angle);
+              b.attachTo = bd.attachTo || 'end';
+              b.imgW = bd.imgW || 50; b.imgH = bd.imgH || 50; b.imgOffX = bd.imgOffX; b.imgOffY = bd.imgOffY;
+              b.imgAngle = bd.imgAngle !== undefined ? bd.imgAngle : 630;
+              b.activeExpression = bd.activeExpression || "default";
+              if (bd.baseImageSrc) { let im = new Image(); im.src = bd.baseImageSrc; b.baseImage = im; }
+              if (bd.expressions) {
+                b.expressions = {};
+                Object.keys(bd.expressions).forEach(k => {
+                  b.expressions[k] = bd.expressions[k].map(src => { let im = new Image(); im.src = src; return im; });
                 });
+              }
+              return b;
+            })
+          }));
+          currentSceneId = data.currentSceneId || scenes[0].id;
+        }
+      } catch(e) { console.error("Error loading:", e); }
+      maxFrames = getCurrentScene().duration || 120;
+      document.getElementById('max-frames').value = maxFrames;
+      renderScenesList();
+      updateTimelineScale();
+    }
+
+    function renderScenesList() {
+      const list = document.getElementById('scenes-list');
+      list.innerHTML = '';
+      scenes.forEach((s) => {
+        const div = document.createElement('div');
+        div.className = `scene-card ${s.id === currentSceneId ? 'active' : ''}`;
+        div.innerHTML = `<span>🎬 ${s.title}</span> <span style="font-size:10px; color:#94a3b8;">${s.duration} إطار</span>`;
+        div.onclick = () => switchScene(s.id);
+        list.appendChild(div);
+      });
+    }
+
+    function addNewScene() {
+      const id = 'scene_' + Date.now();
+      scenes.push({ id, title: `مشهد ${scenes.length + 1}`, duration: 120, bgImgSrc: null, bones: [], keyframes: [], expressionClips: [], audioClips: [] });
+      switchScene(id);
+      saveProjectState();
+    }
+
+    function switchScene(id) {
+      currentSceneId = id;
+      const s = getCurrentScene();
+      maxFrames = s.duration || 120;
+      document.getElementById('max-frames').value = maxFrames;
+      currentFrame = 0;
+      selectedBoneId = null;
+      document.getElementById('selected-bone-panel').style.display = 'none';
+      renderScenesList();
+      updateTimelineScale();
+      saveProjectState();
+    }
+
+    function updateTransforms() {
+      const scene = getCurrentScene();
+      scene.bones.forEach(b => b._updated = false);
+      scene.bones.forEach(b => calculateWorld(b, scene.bones));
+    }
+
+    function calculateWorld(bone, bonesList) {
+      if (bone._updated) return;
+      if (bone.parentId) {
+        const parent = bonesList.find(b => b.id === bone.parentId);
+        if (parent) {
+          calculateWorld(parent, bonesList);
+          const parentRad = (parent.worldAngle * Math.PI) / 180;
+          
+          if (bone.attachTo === 'start') {
+            bone.worldX = parent.worldX;
+            bone.worldY = parent.worldY;
+          } else {
+            bone.worldX = parent.worldX + Math.cos(parentRad) * parent.length;
+            bone.worldY = parent.worldY + Math.sin(parentRad) * parent.length;
+          }
+          bone.worldAngle = parent.worldAngle + bone.angle;
+        } else {
+          bone.parentId = null;
+          bone.worldX = bone.x; bone.worldY = bone.y; bone.worldAngle = bone.angle;
+        }
+      } else {
+        bone.worldX = bone.x; bone.worldY = bone.y; bone.worldAngle = bone.angle;
+      }
+      bone._updated = true;
+    }
+
+    function engineLoop(timestamp) {
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const dt = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
+
+      if (isPlaying) {
+        currentFrame += dt * playSpeed;
+        if (currentFrame > maxFrames) {
+          const currentIndex = scenes.findIndex(s => s.id === currentSceneId);
+          if (currentIndex < scenes.length - 1) {
+            currentSceneId = scenes[currentIndex + 1].id;
+            maxFrames = getCurrentScene().duration;
+            document.getElementById('max-frames').value = maxFrames;
+            currentFrame = 0;
+            renderScenesList();
+            updateTimelineScale();
+          } else {
+            currentSceneId = scenes[0].id;
+            maxFrames = getCurrentScene().duration;
+            document.getElementById('max-frames').value = maxFrames;
+            currentFrame = 0;
+            renderScenesList();
+            updateTimelineScale();
+          }
+        }
+        evaluateFrame(currentFrame);
+        updateUIProgress();
+      }
+      
+      updateTransforms();
+      drawStage();
+      requestAnimationFrame(engineLoop);
+    }
+    requestAnimationFrame(engineLoop);
+
+    function applyEasing(t, type) {
+      if (type === 'linear') return t;
+      if (type === 'easeIn') return t * t;
+      if (type === 'easeOut') return t * (2 - t);
+      if (type === 'bounce') {
+        const n1 = 7.5625, d1 = 2.75;
+        if (t < 1 / d1) return n1 * t * t;
+        if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75;
+        if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375;
+        return n1 * (t -= 2.625 / d1) * t + 0.984375;
+      }
+      return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    }
+
+    function evaluateFrame(frame) {
+      const scene = getCurrentScene();
+      scene.bones.forEach(b => {
+        let activeClip = scene.expressionClips.find(c => c.boneId === b.id && frame >= c.startFrame && frame <= (c.startFrame + c.duration));
+        if (activeClip) b.activeExpression = activeClip.exprName;
+      });
+
+      if (scene.keyframes.length === 0) return;
+      let kf1 = scene.keyframes[0], kf2 = scene.keyframes[scene.keyframes.length - 1];
+      for (let k of scene.keyframes) { if (k.frame <= frame) kf1 = k; }
+      for (let i = scene.keyframes.length - 1; i >= 0; i--) { if (scene.keyframes[i].frame >= frame) kf2 = scene.keyframes[i]; }
+
+      const easingType = document.getElementById('easing-select').value;
+
+      scene.bones.forEach(b => {
+        const s1 = kf1.states[b.id], s2 = kf2.states[b.id];
+        if (s1 && s2 && kf1.frame !== kf2.frame) {
+          const t = Math.max(0, Math.min(1, (frame - kf1.frame) / (kf2.frame - kf1.frame)));
+          const smoothT = applyEasing(t, easingType);
+          
+          if (!b.parentId) {
+            b.x = s1.x + (s2.x - s1.x) * smoothT;
+            b.y = s1.y + (s2.y - s1.y) * smoothT;
+          }
+          let dAngle = s2.angle - s1.angle;
+          while(dAngle > 180) dAngle -= 360;
+          while(dAngle < -180) dAngle += 360;
+          b.angle = s1.angle + dAngle * smoothT;
+        } else if (s1) {
+          if (!b.parentId) { b.x = s1.x; b.y = s1.y; }
+          b.angle = s1.angle;
+        }
+      });
+    }
+
+    function getMouse(e) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: (e.clientX - rect.left) * (canvas.width / rect.width), y: (e.clientY - rect.top) * (canvas.height / rect.height) };
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      mousePos = getMouse(e);
+      isInteracting = true;
+      const scene = getCurrentScene();
+
+      if (mode === 'draw') {
+        updateTransforms();
+        autoParentId = null;
+        let startX = mousePos.x;
+        let startY = mousePos.y;
+
+        for (let b of scene.bones) {
+          const rad = (b.worldAngle * Math.PI) / 180;
+          const eX = b.worldX + Math.cos(rad) * b.length;
+          const eY = b.worldY + Math.sin(rad) * b.length;
+          if (Math.hypot(mousePos.x - eX, mousePos.y - eY) < 20) {
+            autoParentId = b.id;
+            startX = eX;
+            startY = eY;
+            break;
+          }
+        }
+        drawStartPos = { x: startX, y: startY };
+      } else {
+        selectedBoneId = null;
+        activeDrag = null;
+        updateTransforms();
+
+        for (let b of scene.bones) {
+          const rad = (b.worldAngle * Math.PI) / 180;
+          const eX = b.worldX + Math.cos(rad) * b.length;
+          const eY = b.worldY + Math.sin(rad) * b.length;
+
+          if (Math.hypot(mousePos.x - eX, mousePos.y - eY) < 16) {
+            selectedBoneId = b.id;
+            activeDrag = { boneId: b.id, type: 'tip' };
+            syncUI();
+            break;
+          }
+          if (Math.hypot(mousePos.x - b.worldX, mousePos.y - b.worldY) < 16) {
+            selectedBoneId = b.id;
+            activeDrag = { boneId: b.id, type: 'root', startX: b.x, startY: b.y, mouseStartX: mousePos.x, mouseStartY: mousePos.y };
+            syncUI();
+            break;
+          }
+        }
+        if (!selectedBoneId) document.getElementById('selected-bone-panel').style.display = 'none';
+      }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      mousePos = getMouse(e);
+      if (isInteracting && mode === 'pose' && activeDrag) {
+        const scene = getCurrentScene();
+        const bone = scene.bones.find(b => b.id === activeDrag.boneId);
+        if (bone) {
+          if (activeDrag.type === 'tip') {
+            const dx = mousePos.x - bone.worldX;
+            const dy = mousePos.y - bone.worldY;
+            let targetAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+            if (bone.parentId) {
+              const parent = scene.bones.find(p => p.id === bone.parentId);
+              if (parent) targetAngle -= parent.worldAngle;
+            }
+            bone.angle = targetAngle;
+          } else if (activeDrag.type === 'root' && !bone.parentId) {
+            bone.x = activeDrag.startX + (mousePos.x - activeDrag.mouseStartX);
+            bone.y = activeDrag.startY + (mousePos.y - activeDrag.mouseStartY);
+          }
+          autoUpdateKeyframe(bone);
+        }
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      if (!isInteracting) return;
+      isInteracting = false;
+      activeDrag = null;
+      const scene = getCurrentScene();
+      if (mode === 'draw' && drawStartPos) {
+        const dx = mousePos.x - drawStartPos.x, dy = mousePos.y - drawStartPos.y;
+        const len = Math.hypot(dx, dy);
+        if (len > 10) {
+          let initialAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+          if (autoParentId) {
+            const parentBone = scene.bones.find(b => b.id === autoParentId);
+            if (parentBone) initialAngle -= parentBone.worldAngle;
+          }
+          const nb = new Bone('b_' + Date.now(), autoParentId, drawStartPos.x, drawStartPos.y, len, initialAngle);
+          scene.bones.push(nb); selectedBoneId = nb.id; syncUI(); saveProjectState();
+        }
+        drawStartPos = null;
+        autoParentId = null;
+      }
+    });
+
+    let bgImgObj = null;
+    function drawStage() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const scene = getCurrentScene();
+
+      if (scene.bgImgSrc) {
+        if (!bgImgObj || bgImgObj.src !== scene.bgImgSrc) {
+          bgImgObj = new Image(); bgImgObj.src = scene.bgImgSrc;
+        }
+        if (bgImgObj.complete) ctx.drawImage(bgImgObj, 0, 0, canvas.width, canvas.height);
+      }
+
+      scene.bones.forEach(b => {
+        let img = b.baseImage;
+        if (b.activeExpression !== "default" && b.expressions[b.activeExpression]) {
+          const frames = b.expressions[b.activeExpression];
+          if (frames.length > 0) {
+            const seqIndex = Math.floor(currentFrame / 4) % frames.length;
+            img = frames[seqIndex];
+          }
+        }
+
+        if (img) {
+          const rad = (b.worldAngle * Math.PI) / 180;
+          const midX = b.worldX + Math.cos(rad) * (b.length / 2);
+          const midY = b.worldY + Math.sin(rad) * (b.length / 2);
+
+          ctx.save();
+          ctx.translate(midX, midY);
+          ctx.rotate(rad);
+          ctx.translate(b.imgOffX, b.imgOffY);
+          ctx.rotate((b.imgAngle * Math.PI) / 180);
+          ctx.drawImage(img, -b.imgW/2, -b.imgH/2, b.imgW, b.imgH);
+          ctx.restore();
+        }
+      });
+
+      if (showBones) {
+        scene.bones.forEach(b => {
+          const isSel = b.id === selectedBoneId;
+          const rad = (b.worldAngle * Math.PI) / 180;
+          const eX = b.worldX + Math.cos(rad) * b.length;
+          const eY = b.worldY + Math.sin(rad) * b.length;
+
+          ctx.beginPath(); ctx.moveTo(b.worldX, b.worldY); ctx.lineTo(eX, eY);
+          ctx.lineWidth = isSel ? 4 : 2; ctx.strokeStyle = isSel ? '#3b82f6' : 'rgba(148, 163, 184, 0.4)'; ctx.stroke();
+          
+          ctx.beginPath(); ctx.arc(b.worldX, b.worldY, 5, 0, Math.PI*2);
+          ctx.fillStyle = '#fff'; ctx.fill();
+          ctx.strokeStyle = isSel ? '#3b82f6' : '#1f2333'; ctx.lineWidth = 2; ctx.stroke();
+          
+          ctx.beginPath(); ctx.arc(eX, eY, 6, 0, Math.PI*2);
+          ctx.fillStyle = isSel ? '#60a5fa' : '#38bdf8'; ctx.fill();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
         });
-    </script>
+
+        if (drawStartPos && isInteracting) {
+          ctx.beginPath(); ctx.moveTo(drawStartPos.x, drawStartPos.y); ctx.lineTo(mousePos.x, mousePos.y);
+          ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2; ctx.stroke();
+        }
+      }
+    }
+
+    function syncUI() {
+      const scene = getCurrentScene();
+      const b = scene.bones.find(x => x.id === selectedBoneId);
+      if (!b) return;
+      document.getElementById('selected-bone-panel').style.display = 'flex';
+      document.getElementById('texW').value = b.imgW; document.getElementById('texH').value = b.imgH;
+      document.getElementById('texOffX').value = b.imgOffX; document.getElementById('texOffY').value = b.imgOffY;
+      document.getElementById('texAngle').value = b.imgAngle;
+      document.getElementById('bone-attach-select').value = b.attachTo || 'end';
+
+      const parentSel = document.getElementById('bone-parent-select');
+      parentSel.innerHTML = '<option value="">(عظمة رئيسية حرة - بدون أب)</option>';
+      scene.bones.forEach(other => {
+        if(other.id !== b.id) {
+          parentSel.innerHTML += `<option value="${other.id}" ${other.id === b.parentId ? 'selected' : ''}>${other.id}</option>`;
+        }
+      });
+      
+      const sel = document.getElementById('select-clip-expr');
+      sel.innerHTML = '';
+      Object.keys(b.expressions).forEach(expName => {
+        sel.innerHTML += `<option value="${expName}">${expName}</option>`;
+      });
+    }
+
+    function changeBoneParent() {
+      const scene = getCurrentScene();
+      const b = scene.bones.find(x => x.id === selectedBoneId);
+      if (!b) return;
+      const pid = document.getElementById('bone-parent-select').value;
+      b.parentId = pid ? pid : null;
+      saveProjectState();
+    }
+
+    function changeBoneAttachment() {
+      const scene = getCurrentScene();
+      const b = scene.bones.find(x => x.id === selectedBoneId);
+      if (!b) return;
+      b.attachTo = document.getElementById('bone-attach-select').value;
+      saveProjectState();
+    }
+
+    function uploadBoneImage(e) {
+      const scene = getCurrentScene();
+      const b = scene.bones.find(x => x.id === selectedBoneId); if (!b || !e.target.files[0]) return;
+      const reader = new FileReader(); reader.onload = ev => {
+        const img = new Image(); img.onload = () => {
+          b.baseImage = img; 
+          b.imgW = 50; 
+          b.imgH = 50; 
+          b.imgAngle = 630; 
+          syncUI(); 
+          autoUpdateKeyframe(b); 
+          saveProjectState();
+        }; img.src = ev.target.result;
+      }; reader.readAsDataURL(e.target.files[0]);
+    }
+
+    function createNewExpression(e) {
+      const scene = getCurrentScene();
+      const b = scene.bones.find(x => x.id === selectedBoneId);
+      const name = document.getElementById('new-exp-name').value.trim();
+      if (!b || !name || !e.target.files.length) return alert("اكتب اسم التعبير واختر الصور");
+      
+      b.expressions[name] = [];
+      let loaded = 0;
+      Array.from(e.target.files).forEach((file, i) => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const img = new Image(); img.onload = () => {
+            b.expressions[name][i] = img; loaded++;
+            if(loaded === e.target.files.length) { syncUI(); saveProjectState(); }
+          }; img.src = ev.target.result;
+        }; reader.readAsDataURL(file);
+      });
+      document.getElementById('new-exp-name').value = '';
+    }
+
+    function addExpressionClip() {
+      const scene = getCurrentScene();
+      const b = scene.bones.find(x => x.id === selectedBoneId);
+      if (!b) return alert("اختر عظمة أولاً");
+      const exprName = document.getElementById('select-clip-expr').value;
+      const duration = parseInt(document.getElementById('clip-duration-input').value) || 30;
+      if (!exprName) return alert("لا يوجد تعبير متاح");
+
+      scene.expressionClips.push({
+        id: 'expr_' + Date.now(),
+        boneId: b.id,
+        exprName: exprName,
+        startFrame: Math.round(currentFrame),
+        duration: duration
+      });
+      renderExpressionClips();
+      saveProjectState();
+    }
+
+    function updateTex() {
+      const scene = getCurrentScene();
+      const b = scene.bones.find(x => x.id === selectedBoneId); if(!b) return;
+      b.imgW = parseFloat(document.getElementById('texW').value) || 50; 
+      b.imgH = parseFloat(document.getElementById('texH').value) || 50;
+      b.imgOffX = parseFloat(document.getElementById('texOffX').value) || 0; 
+      b.imgOffY = parseFloat(document.getElementById('texOffY').value) || 0;
+      b.imgAngle = parseFloat(document.getElementById('texAngle').value) || 630;
+      saveProjectState();
+    }
+
+    function saveKeyframe() {
+      const scene = getCurrentScene();
+      const state = {};
+      const intFrame = Math.round(currentFrame);
+      scene.bones.forEach(b => { state[b.id] = { x: b.x, y: b.y, angle: b.angle }; });
+      scene.keyframes = scene.keyframes.filter(k => k.frame !== intFrame);
+      scene.keyframes.push({ frame: intFrame, states: state });
+      scene.keyframes.sort((a,b) => a.frame - b.frame);
+      drawTimelineNodes();
+      saveProjectState();
+    }
+
+    function copyKeyframe() {
+      const scene = getCurrentScene();
+      const intFrame = Math.round(currentFrame);
+      const kf = scene.keyframes.find(k => k.frame === intFrame);
+      if (!kf) return alert("لا توجد لقطة في هذا الإطار!");
+      copiedKeyframeData = JSON.parse(JSON.stringify(kf.states));
+      alert("تم نسخ اللقطة!");
+    }
+
+    function pasteKeyframe() {
+      if (!copiedKeyframeData) return alert("انسخ لقطة أولاً!");
+      const scene = getCurrentScene();
+      const intFrame = Math.round(currentFrame);
+      scene.keyframes = scene.keyframes.filter(k => k.frame !== intFrame);
+      scene.keyframes.push({ frame: intFrame, states: copiedKeyframeData });
+      scene.keyframes.sort((a,b) => a.frame - b.frame);
+      drawTimelineNodes();
+      saveProjectState();
+      alert("تم لصق اللقطة!");
+    }
+    
+    function autoUpdateKeyframe(bone) {
+      const scene = getCurrentScene();
+      let kf = scene.keyframes.find(k => k.frame === Math.round(currentFrame));
+      if (kf && kf.states[bone.id]) {
+        kf.states[bone.id] = { x: bone.x, y: bone.y, angle: bone.angle };
+        saveProjectState();
+      }
+    }
+
+    function deleteKeyframe() {
+      const scene = getCurrentScene();
+      scene.keyframes = scene.keyframes.filter(k => k.frame !== Math.round(currentFrame));
+      drawTimelineNodes();
+      saveProjectState();
+    }
+
+    function updateTimelineScale() {
+      maxFrames = parseInt(document.getElementById('max-frames').value) || 120;
+      getCurrentScene().duration = maxFrames;
+      drawTimelineNodes();
+      renderExpressionClips();
+      renderAudioClips();
+      saveProjectState();
+    }
+
+    async function recordAudioClip() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        let chunks = [];
+        mediaRecorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onloadedmetadata = () => {
+            const durFrames = Math.round(audio.duration * playSpeed);
+            const scene = getCurrentScene();
+            scene.audioClips.push({ id: 'audio_' + Date.now(), src: url, startFrame: Math.round(currentFrame), duration: durFrames });
+            renderAudioClips();
+            saveProjectState();
+            alert("تم تسجيل المقطع الصوتي بنجاح!");
+          };
+        };
+        mediaRecorder.start();
+        setTimeout(() => { if(mediaRecorder.state === "recording") mediaRecorder.stop(); }, 5000);
+        alert("جاري التسجيل لمدة 5 ثوانٍ...");
+      } catch(err) { alert("يجب السماح بالمايكروفون"); }
+    }
+
+    function renderAudioClips() {
+      const track = document.getElementById('audio-track');
+      track.innerHTML = '';
+      const scene = getCurrentScene();
+      scene.audioClips.forEach(clip => {
+        const div = document.createElement('div');
+        div.className = 'nle-clip audio-clip-item';
+        div.style.left = `${(clip.startFrame / maxFrames) * 100}%`;
+        div.style.width = `${(clip.duration / maxFrames) * 100}%`;
+        div.innerText = `🎵 صوت (${Math.round(clip.duration/playSpeed)}ث)`;
+        div.onmousedown = (e) => { draggingAudioId = clip.id; audioDragStartX = e.clientX; e.stopPropagation(); };
+        track.appendChild(div);
+      });
+    }
+
+    function renderExpressionClips() {
+      const track = document.getElementById('expr-track');
+      track.innerHTML = '';
+      const scene = getCurrentScene();
+      scene.expressionClips.forEach(clip => {
+        const div = document.createElement('div');
+        div.className = 'nle-clip expr-clip-item';
+        div.style.left = `${(clip.startFrame / maxFrames) * 100}%`;
+        div.style.width = `${(clip.duration / maxFrames) * 100}%`;
+        div.innerText = `😊 ${clip.exprName}`;
+        div.onmousedown = (e) => { draggingExprClipId = clip.id; exprDragStartX = e.clientX; e.stopPropagation(); };
+        track.appendChild(div);
+      });
+    }
+
+    window.addEventListener('mousemove', e => {
+      if (isScrubbing) scrubTo(e);
+      if (draggingAudioId) {
+        const scene = getCurrentScene();
+        const clip = scene.audioClips.find(c => c.id === draggingAudioId);
+        if (clip) {
+          const w = document.getElementById('audio-track').clientWidth;
+          clip.startFrame = Math.max(0, Math.min(maxFrames - clip.duration, clip.startFrame + ((e.clientX - audioDragStartX)/w)*maxFrames));
+          audioDragStartX = e.clientX; renderAudioClips();
+        }
+      }
+      if (draggingExprClipId) {
+        const scene = getCurrentScene();
+        const clip = scene.expressionClips.find(c => c.id === draggingExprClipId);
+        if (clip) {
+          const w = document.getElementById('expr-track').clientWidth;
+          clip.startFrame = Math.max(0, Math.min(maxFrames - clip.duration, clip.startFrame + ((e.clientX - exprDragStartX)/w)*maxFrames));
+          exprDragStartX = e.clientX; renderExpressionClips();
+        }
+      }
+    });
+    window.addEventListener('mouseup', () => { isScrubbing = false; draggingAudioId = null; draggingExprClipId = null; saveProjectState(); });
+
+    function startScrubbing(e) { isScrubbing = true; scrubTo(e); }
+    function scrubTo(e) {
+      const rect = document.getElementById('main-track').getBoundingClientRect();
+      let pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      currentFrame = pct * maxFrames;
+      updateUIProgress(); evaluateFrame(currentFrame);
+    }
+
+    function updateUIProgress() {
+      document.getElementById('lbl-frame').innerText = Math.round(currentFrame);
+      const sceneIndex = scenes.findIndex(s => s.id === currentSceneId) + 1;
+      document.getElementById('lbl-scene').innerText = sceneIndex;
+      document.getElementById('scrubber-line').style.left = `${(currentFrame / maxFrames) * 100}%`;
+    }
+
+    function drawTimelineNodes() {
+      const scene = getCurrentScene();
+      const track = document.getElementById('main-track');
+      track.querySelectorAll('.kf-node').forEach(n => n.remove());
+      scene.keyframes.forEach(k => {
+        const n = document.createElement('div'); n.className = 'kf-node';
+        n.style.left = `${(k.frame / maxFrames) * 100}%`; track.appendChild(n);
+      });
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      document.getElementById('btn-play').innerText = isPlaying ? "⏸ إيقاف" : "▶ تشغيل";
+    }
+
+    function setMode(m) {
+      mode = m;
+      document.querySelectorAll('header button[id^=btn-mode]').forEach(b => b.classList.remove('active'));
+      document.getElementById(`btn-mode-${m}`).classList.add('active');
+    }
+
+    function toggleBoneVisibility() { showBones = !showBones; }
+    function resizeCanvas() { canvas.width = document.getElementById('canvas-width-input').value; canvas.height = document.getElementById('canvas-height-input').value; }
+    function deleteSelectedBone() {
+      if(!selectedBoneId) return;
+      const scene = getCurrentScene();
+      const ids = new Set([selectedBoneId]); let add = true;
+      while(add){ add=false; scene.bones.forEach(b=>{if(ids.has(b.parentId)&&!ids.has(b.id)){ids.add(b.id);add=true;}}); }
+      scene.bones = scene.bones.filter(b=>!ids.has(b.id));
+      selectedBoneId=null; document.getElementById('selected-bone-panel').style.display='none';
+      saveProjectState();
+    }
+    function uploadSceneBackground(e){
+      const r = new FileReader(); r.onload = ev => { getCurrentScene().bgImgSrc = ev.target.result; saveProjectState(); }; r.readAsDataURL(e.target.files[0]);
+    }
+
+    window.onload = () => {
+      loadProjectState();
+      drawTimelineNodes();
+      renderExpressionClips();
+      renderAudioClips();
+      checkUserSession();
+    };
+  </script>
 </body>
 </html>
