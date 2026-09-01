@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Upload Studio - نظام الهيكل الهرمي الحقيقي</title>
+    <title>Twencraft Upload Studio - النسخة النهائية المطورة</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -20,7 +20,7 @@
         .app-container {
             display: flex;
             gap: 20px;
-            max-width: 950px;
+            max-width: 980px;
             width: 100%;
             justify-content: center;
             flex-wrap: wrap;
@@ -29,9 +29,9 @@
             background: #2a2a2a;
             padding: 15px;
             border-radius: 8px;
-            width: 320px;
+            width: 340px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            max-height: 520px;
+            max-height: 550px;
             overflow-y: auto;
         }
         .stage-container {
@@ -80,7 +80,7 @@
             justify-content: center;
             align-items: center;
         }
-        /* عقدة العظمة الهرمية */
+        /* العقدة الهرمية للعظمة والمفصل */
         .bone-node {
             position: absolute;
             width: 0;
@@ -95,34 +95,35 @@
             pointer-events: none;
         }
         .bone-control {
-            margin-bottom: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
             font-size: 13px;
         }
         .bone-control label {
             display: flex;
             justify-content: space-between;
             color: #4CAF50;
-            margin-bottom: 4px;
+            font-weight: bold;
+            margin-bottom: 6px;
         }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <!-- لوحة التحكم -->
+        <!-- لوحة تحكم العظام الهرمية -->
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">نظام العظام الهرمي (Parent-Child)</div>
+            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">لوحة تحريك العظام (هيكل هرمي)</div>
             <div id="bonesControls"></div>
         </div>
 
         <div class="stage-container">
-            <!-- مكتبة الشخصيات -->
             <div class="library-bar">
                 <label for="characterSelect" style="white-space: nowrap;">المكتبة:</label>
                 <select id="characterSelect"></select>
             </div>
 
-            <!-- مساحة المعاينة -->
             <div class="stage">
                 <div class="character-rig" id="characterRig"></div>
             </div>
@@ -130,65 +131,71 @@
     </div>
 
     <script>
-        // تعريف هيكل البيانات هرمياً بحيث تتبع الأطراف عظمة الجذع (Torso)
+        // هيكل بيانات الشخصية بعد قص الهوامش الشفافة وربطها بنظام الأبوة والأبناء
         const charactersData = [
             {
                 id: "hero_mascot",
-                name: "الشخصية الأساسية (الافتراضية)",
+                name: "الشخصية الأساسية (بدون هوامش)",
                 rootBone: "torso",
                 bones: {
                     torso: {
                         src: "./res/torso.png",
                         width: 74,
-                        x: 1,
-                        y: -37,
+                        x: 0,
+                        y: 0,
                         zIndex: 2,
                         origin: "center center",
+                        minRot: -20, maxRot: 20,
                         children: ["head", "right_arm", "left_arm", "right_leg", "left_leg"]
                     },
                     head: {
                         src: "./res/head.png",
                         width: 88,
                         x: 0,
-                        y: -105, // موقع الرأس بالنسبة لمركز الجذع
+                        y: -110, // موقع الرأس بالنسبة لأعلى الجذع
                         zIndex: 3,
                         origin: "bottom center",
+                        minRot: -45, maxRot: 45,
                         children: []
                     },
                     right_arm: {
                         src: "./res/right_arm.png",
                         width: 32,
-                        x: 35,
-                        y: -25, // موقع مفصل الكتف الأيمن بالنسبة للجذع
+                        x: 42,
+                        y: -50, // مفصل الكتف الأيمن
                         zIndex: 1,
                         origin: "top center",
+                        minRot: -90, maxRot: 90,
                         children: []
                     },
                     left_arm: {
                         src: "./res/left_arm.png",
                         width: 32,
-                        x: -35,
-                        y: -25, // موقع مفصل الكتف الأيسر بالنسبة للجذع
+                        x: -42,
+                        y: -50, // مفصل الكتف الأيسر
                         zIndex: 1,
                         origin: "top center",
+                        minRot: -90, maxRot: 90,
                         children: []
                     },
                     right_leg: {
                         src: "./res/right_leg.png",
                         width: 32,
-                        x: 18,
-                        y: 35, // موقع مفصل الورك الأيمن بالنسبة للجذع
+                        x: 20,
+                        y: 75, // مفصل الورك الأيمن
                         zIndex: 1,
                         origin: "top center",
+                        minRot: -45, maxRot: 45,
                         children: []
                     },
                     left_leg: {
                         src: "./res/left_leg.png",
                         width: 25,
-                        x: -18,
-                        y: 35, // موقع مفصل الورك الأيسر بالنسبة للجذع
+                        x: -20,
+                        y: 75, // مفصل الورك الأيسر
                         zIndex: 1,
                         origin: "top center",
+                        minRot: -45, maxRot: 45,
                         children: []
                     }
                 }
@@ -219,17 +226,15 @@
             });
         }
 
-        // دالة تعاودية (Recursive) لبناء الشجرة الهرمية في الـ DOM
+        // بناء شجرة الـ DOM هرمياً بشكل متسلسل
         function createBoneElement(boneName, bonesDict) {
             const bone = bonesDict[boneName];
             
-            // حاوية المفصل العظمي
             const nodeDiv = document.createElement('div');
             nodeDiv.className = 'bone-node';
             nodeDiv.style.zIndex = bone.zIndex;
             nodeDiv.style.transform = `translate(${bone.x}px, ${bone.y}px)`;
 
-            // صورة العضو المرتبطة بهذا المفصل
             const img = document.createElement('img');
             img.src = bone.src;
             img.className = 'body-part';
@@ -241,7 +246,7 @@
             
             nodeDiv.appendChild(img);
 
-            // إضافة العناصر الأبناء داخل عنصر الأب هرمياً
+            // تمرير الأبناء داخله لوراثة الإحداثيات والدوران تلقائياً
             if (bone.children && bone.children.length > 0) {
                 bone.children.forEach(childName => {
                     const childElement = createBoneElement(childName, bonesDict);
@@ -255,8 +260,6 @@
         function renderCharacter() {
             const char = charactersData[activeCharacterIndex];
             rigContainer.innerHTML = '';
-            
-            // بناء الشجرة بدءاً من الجذر الأساسي (Torso)
             const rootTree = createBoneElement(char.rootBone, char.bones);
             rigContainer.appendChild(rootTree);
         }
@@ -265,13 +268,13 @@
             bonesControls.innerHTML = '';
             const char = charactersData[activeCharacterIndex];
 
-            for (const partName of Object.keys(char.bones)) {
+            for (const [partName, bone] of Object.entries(char.bones)) {
                 const currentRot = boneRotations[partName] || 0;
                 const div = document.createElement('div');
                 div.className = 'bone-control';
                 div.innerHTML = `
                     <label><span>عظمة: ${partName}</span><span id="val_${partName}">${currentRot}°</span></label>
-                    <input type="range" min="-90" max="90" value="${currentRot}" data-part="${partName}">
+                    <input type="range" min="${bone.minRot}" max="${bone.maxRot}" value="${currentRot}" data-part="${partName}">
                 `;
                 bonesControls.appendChild(div);
             }
