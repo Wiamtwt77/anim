@@ -1,0 +1,5 @@
+[
+  { "id": "head", "n": "رأس", "src": "./res/head.png" },
+  { "id": "hair", "n": "شعر", "src": "./res/hair.png" },
+  { "id": "chest", "n": "صدر", "src": "./res/chest.png" }
+]
