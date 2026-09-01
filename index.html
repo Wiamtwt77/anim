@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استوديو تحريك الشخصيات - Character Studio</title>
+    <style>
+        :root {
+            --bg-color: #1e1e2f;
+            --panel-bg: #2a2a3d;
+            --accent-color: #ff758c;
+            --text-color: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* لوحة التحكم الجانبية */
+        aside {
+            width: 300px;
+            background-color: var(--panel-bg);
+            border-left: 1px solid #3f3f5f;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .part-item {
+            background: #35354f;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .part-item span {
+            color: #b0b0c3;
+        }
+
+        /* مساحة العمل الرئيسية لعرض الشخصية */
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background-image: radial-gradient(#2d2d44 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        canvas {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed #4f4f7f;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .loading {
+            position: absolute;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- الشريط الجانبي لعرض الأجزاء المستوردة -->
+    <aside>
+        <h2>أجزاء الشخصية</h2>
+        <div id="partsList">
+            <p style="color: #888;">جاري تحميل الأجزاء...</p>
+        </div>
+    </aside>
+
+    <!-- منطقة الرسم وعرض الشخصية -->
+    <main>
+        <div id="loadingText" class="loading">جاري جلب الشخصية وتجهيز اللوحة...</div>
+        <!-- لوحة الرسم التي سيتم دمج ورسم الأجزاء عليها -->
+        <canvas id="characterCanvas" width="500" height="600"></canvas>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('characterCanvas');
+        const ctx = canvas.getContext('2d');
+        const partsListContainer = document.getElementById('partsList');
+        const loadingText = document.getElementById('loadingText');
+
+        // تخزين الصور المُحمّلة
+        const loadedImages = {};
+        
+        // ترتيب طبقات الرسم (من الخلف إلى الأمام)
+        const renderOrder = ['chest', 'head', 'hair'];
+
+        async function initStudio() {
+            try {
+                // جلب ملف الـ JSON من الجذر الرئيسي
+                const response = await fetch('./list.json');
+                if (!response.ok) throw new Error('فشل تحميل ملف list.json');
+                
+                const partsData = await response.json();
+                partsListContainer.innerHTML = ''; // تفريغ النص التمهيدي
+
+                // تحميل كل صورة على حدة
+                const promises = partsData.map(part => {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.src = part.src;
+                        img.onload = () => {
+                            loadedImages[part.id] = img;
+                            
+                            // إضافة العنصر للقائمة الجانبية في الواجهة
+                            partsListContainer.innerHTML += `
+                                <div class="part-item">
+                                    <span>${part.n}</span>
+                                    <strong style="color: var(--accent-color);">متصل ✓</strong>
+                                </div>
+                            `;
+                            resolve();
+                        };
+                        img.onerror = () => reject(`تعذر تحميل الصورة: ${part.src}`);
+                    });
+                });
+
+                // الانتظار حتى يتم تحميل جميع الصور بالكامل
+                await Promise.all(promises);
+                loadingText.style.display = 'none';
+                
+                // رسم الشخصية على الـ Canvas
+                drawCharacter();
+
+            } catch (error) {
+                console.error(error);
+                loadingText.innerText = 'حدث خطأ أثناء تحميل أجزاء الشخصية!';
+                loadingText.style.color = '#ff4d4d';
+            }
+        }
+
+        function drawCharacter() {
+            // تنظيف اللوحة قبل الرسم
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // نقطة المنتصف المبدئية لمركز الشخصية على اللوحة
+            const centerX = canvas.width / 2;
+            const startY = 150;
+
+            // رسم الأجزاء بالتسلسل الصحيح (صدر -> رأس -> شعر)
+            renderOrder.forEach(id => {
+                if (loadedImages[id]) {
+                    const img = loadedImages[id];
+                    // حساب إحداثيات التمركز لكل قطعة بناءً على أبعادها
+                    const x = centerX - (img.width / 2);
+                    let y = startY;
+
+                    // تعديل طفيف للمواضع الرأسية افتراضياً لترتيب الشكل العام
+                    if (id === 'head') y += 80;
+                    if (id === 'hair') y += 40;
+                    if (id === 'chest') y += 220;
+
+                    ctx.drawImage(img, x, y);
+                }
+            });
+        }
+
+        // تشغيل الاستوديو عند تحميل الصفحة
+        window.onload = initStudio;
+    </script>
+</body>
+</html>
