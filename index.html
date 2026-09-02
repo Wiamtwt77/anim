@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Upload Studio - نظام الرسوم المتحركة والوضعيات</title>
+    <title>Twencraft Upload Studio - نظام الرسوم المتحركة العضوي السلس</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -150,11 +150,11 @@
     </div>
 
     <script>
-        // هيكل بيانات الشخصية (الطبقات وزوايا المفاصل)
+        // هيكل بيانات الشخصية
         const charactersData = [
             {
                 id: "hero_mascot",
-                name: "الشخصية الأساسية (محرك احترافي)",
+                name: "الشخصية الأساسية (تحريك عضوي)",
                 rootBone: "torso",
                 bones: {
                     torso: {
@@ -172,7 +172,7 @@
                         width: 88,
                         x: 0,
                         y: -55,
-                        zIndex: 4, // في الأعلى تماماً
+                        zIndex: 4,
                         origin: "bottom center",
                         minRot: -60, maxRot: 60,
                         children: []
@@ -182,7 +182,7 @@
                         width: 32,
                         x: 25,
                         y: -38,
-                        zIndex: 3, // مع الصدر، مركز الدوران الكتف
+                        zIndex: 3,
                         origin: "top center",
                         minRot: -180, maxRot: 180,
                         children: []
@@ -192,7 +192,7 @@
                         width: 32,
                         x: -25,
                         y: -38,
-                        zIndex: 3, // مع الصدر، مركز الدوران الكتف
+                        zIndex: 3,
                         origin: "top center",
                         minRot: -180, maxRot: 180,
                         children: []
@@ -202,7 +202,7 @@
                         width: 32,
                         x: 18,
                         y: 40,
-                        zIndex: 1, // تحتهم كلهم
+                        zIndex: 1,
                         origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
@@ -212,7 +212,7 @@
                         width: 25,
                         x: -15,
                         y: 40,
-                        zIndex: 1, // تحتهم كلهم
+                        zIndex: 1,
                         origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
@@ -221,7 +221,7 @@
             }
         ];
 
-        // مكتبة الرسوم المتحركة الضخمة ذات الفريمات الكثيرة والانتقالات السلسة (Keyframes + Lerp)
+        // مكتبة الحركات مع فريمات غنية
         const animationsLibrary = {
             none: {
                 name: "وضعيات يدوية (حر)",
@@ -232,7 +232,7 @@
                 duration: 90,
                 keyframes: [
                     { frame: 0, rot: { head: 0, right_arm: 5, left_arm: -5, right_leg: 0, left_leg: 0, torso: 0 } },
-                    { frame: 45, rot: { head: 3, right_arm: 8, left_arm: -8, right_leg: 2, left_leg: -2, torso: 2 } },
+                    { frame: 45, rot: { head: 4, right_arm: 10, left_arm: -10, right_leg: 3, left_leg: -3, torso: 2 } },
                     { frame: 90, rot: { head: 0, right_arm: 5, left_arm: -5, right_leg: 0, left_leg: 0, torso: 0 } }
                 ]
             },
@@ -241,9 +241,9 @@
                 duration: 60,
                 keyframes: [
                     { frame: 0, rot: { head: 0, right_arm: 10, left_arm: -10, right_leg: 0, left_leg: 0, torso: 0 } },
-                    { frame: 15, rot: { head: -10, right_arm: -110, left_arm: -15, right_leg: 0, left_leg: 0, torso: 5 } },
-                    { frame: 30, rot: { head: 10, right_arm: -80, left_arm: -15, right_leg: 0, left_leg: 0, torso: -5 } },
-                    { frame: 45, rot: { head: -10, right_arm: -110, left_arm: -15, right_leg: 0, left_leg: 0, torso: 5 } },
+                    { frame: 15, rot: { head: -12, right_arm: -115, left_arm: -15, right_leg: 0, left_leg: 0, torso: 6 } },
+                    { frame: 30, rot: { head: 12, right_arm: -75, left_arm: -15, right_leg: 0, left_leg: 0, torso: -6 } },
+                    { frame: 45, rot: { head: -12, right_arm: -115, left_arm: -15, right_leg: 0, left_leg: 0, torso: 6 } },
                     { frame: 60, rot: { head: 0, right_arm: 10, left_arm: -10, right_leg: 0, left_leg: 0, torso: 0 } }
                 ]
             },
@@ -251,11 +251,11 @@
                 name: "مشية واقعية سلسة (متطور)",
                 duration: 40,
                 keyframes: [
-                    { frame: 0, rot: { head: 0, right_arm: 40, left_arm: -40, right_leg: -25, left_leg: 25, torso: 2 } },
-                    { frame: 10, rot: { head: 4, right_arm: 15, left_arm: -15, right_leg: 0, left_leg: 0, torso: 0 } },
-                    { frame: 20, rot: { head: 0, right_arm: -40, left_arm: 40, right_leg: 25, left_leg: -25, torso: -2 } },
-                    { frame: 30, rot: { head: -4, right_arm: -15, left_arm: 15, right_leg: 0, left_leg: 0, torso: 0 } },
-                    { frame: 40, rot: { head: 0, right_arm: 40, left_arm: -40, right_leg: -25, left_leg: 25, torso: 2 } }
+                    { frame: 0, rot: { head: 0, right_arm: 45, left_arm: -45, right_leg: -30, left_leg: 30, torso: 3 } },
+                    { frame: 10, rot: { head: 5, right_arm: 15, left_arm: -15, right_leg: 0, left_leg: 0, torso: 0 } },
+                    { frame: 20, rot: { head: 0, right_arm: -45, left_arm: 45, right_leg: 30, left_leg: -30, torso: -3 } },
+                    { frame: 30, rot: { head: -5, right_arm: -15, left_arm: 15, right_leg: 0, left_leg: 0, torso: 0 } },
+                    { frame: 40, rot: { head: 0, right_arm: 45, left_arm: -45, right_leg: -30, left_leg: 30, torso: 3 } }
                 ]
             },
             dance: {
@@ -263,9 +263,9 @@
                 duration: 80,
                 keyframes: [
                     { frame: 0, rot: { head: 0, right_arm: 0, left_arm: 0, right_leg: 0, left_leg: 0, torso: 0 } },
-                    { frame: 20, rot: { head: 15, right_arm: -120, left_arm: 45, right_leg: 15, left_leg: -15, torso: 10 } },
-                    { frame: 40, rot: { head: -15, right_arm: 45, left_arm: -120, right_leg: -15, left_leg: 15, torso: -10 } },
-                    { frame: 60, rot: { head: 10, right_arm: -90, left_arm: -90, right_leg: 20, left_leg: 20, torso: 0 } },
+                    { frame: 20, rot: { head: 18, right_arm: -125, left_arm: 50, right_leg: 20, left_leg: -20, torso: 12 } },
+                    { frame: 40, rot: { head: -18, right_arm: 50, left_arm: -125, right_leg: -20, left_leg: 20, torso: -12 } },
+                    { frame: 60, rot: { head: 12, right_arm: -95, left_arm: -95, right_leg: 25, left_leg: 25, torso: 0 } },
                     { frame: 80, rot: { head: 0, right_arm: 0, left_arm: 0, right_leg: 0, left_leg: 0, torso: 0 } }
                 ]
             }
@@ -309,11 +309,16 @@
             }
         }
 
-        // محرك الاستيفاء الخطي (Interpolation) للحصول على حركة سلسة جداً بين الفريمات
+        // دالة التخفيف العضوية (Ease In Out Sine) لمنع الخطية والجمود وتحقيق مرونة فائقة
+        function easeInOutSine(t) {
+            return -(Math.cos(Math.PI * t) - 1) / 2;
+        }
+
+        // محرك الاستيفاء مع تطبيق Easing للحركة الطبيعية السلسة
         function updateAnimationInterpolation() {
             if (activeAnimKey !== "none" && isPlaying) {
                 const anim = animationsLibrary[activeAnimKey];
-                currentFrame = (currentFrame + 0.5) % anim.duration; // سرعة الانتقال الفريمي
+                currentFrame = (currentFrame + 0.4) % anim.duration; // سرعة متوازنة وناعمة
                 
                 const kfs = anim.keyframes;
                 let prevKf = kfs[0], nextKf = kfs[1];
@@ -327,13 +332,15 @@
                 }
 
                 const frameRange = nextKf.frame - prevKf.frame;
-                const progress = frameRange === 0 ? 0 : (currentFrame - prevKf.frame) / frameRange;
+                const rawProgress = frameRange === 0 ? 0 : (currentFrame - prevKf.frame) / frameRange;
+                
+                // تحويل التقدم الخطي إلى تقدم عضوي مرن (Non-linear)
+                const smoothProgress = easeInOutSine(rawProgress);
 
-                // حساب زاوية كل مفصل بنعومة تامة عبر الـ Lerp
                 for (let boneName in boneRotations) {
                     const r1 = prevKf.rot[boneName] || 0;
                     const r2 = nextKf.rot[boneName] || 0;
-                    boneRotations[boneName] = Math.round(r1 + (r2 - r1) * progress);
+                    boneRotations[boneName] = Math.round(r1 + (r2 - r1) * smoothProgress);
                     
                     const slider = document.querySelector(`input[data-part="${boneName}"]`);
                     const valSpan = document.getElementById(`val_${boneName}`);
