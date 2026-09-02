@@ -124,7 +124,7 @@
     </div>
 
     <script>
-        // هيكل بيانات الشخصية (محدد بـ 6 مفاصل رئيسية متصلة هندسياً)
+        // هيكل بيانات الشخصية (مع تعديل إحداثيات الذراعين للاندماج بالكتف وترتيب الطبقات بدقة)
         const charactersData = [
             {
                 id: "hero_mascot",
@@ -136,7 +136,7 @@
                         width: 74,
                         x: 0,
                         y: -32,
-                        zIndex: 2,
+                        zIndex: 3, // تحت الرأس
                         origin: "center center",
                         minRot: -20, maxRot: 20,
                         children: ["head", "right_arm", "left_arm", "right_leg", "left_leg"]
@@ -146,7 +146,7 @@
                         width: 88,
                         x: 0,
                         y: -55,
-                        zIndex: 3,
+                        zIndex: 4, // الطبقة الأولى (في الأعلى تماماً)
                         origin: "bottom center",
                         minRot: -45, maxRot: 45,
                         children: []
@@ -154,20 +154,20 @@
                     right_arm: {
                         src: "./res/right_arm.png",
                         width: 32,
-                        x: 30,
-                        y: -30,
-                        zIndex: 1,
-                        origin: "top center", // نقطة اتصال الكتف تماماً
+                        x: 25, // تم تقريبها وتثبيتها عند منطقة الكتف بدقة
+                        y: -38,
+                        zIndex: 3, // مع الصدر وتحت الرأس
+                        origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
                     },
                     left_arm: {
                         src: "./res/left_arm.png",
                         width: 32,
-                        x: -33,
-                        y: -30,
-                        zIndex: 4,
-                        origin: "top center", // نقطة اتصال الكتف تماماً
+                        x: -25, // تم تقريبها وتثبيتها عند منطقة الكتف بدقة
+                        y: -38,
+                        zIndex: 3, // مع الصدر وتحت الرأس
+                        origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
                     },
@@ -176,8 +176,8 @@
                         width: 32,
                         x: 18,
                         y: 40,
-                        zIndex: 1,
-                        origin: "top center", // نقطة اتصال الحوض
+                        zIndex: 1, // تحتهم كلهم (في الأسفل)
+                        origin: "top center",
                         minRot: -45, maxRot: 45,
                         children: []
                     },
@@ -186,8 +186,8 @@
                         width: 25,
                         x: -15,
                         y: 40,
-                        zIndex: 1,
-                        origin: "top center", // نقطة اتصال الحوض
+                        zIndex: 1, // تحتهم كلهم (في الأسفل)
+                        origin: "top center",
                         minRot: -45, maxRot: 45,
                         children: []
                     }
@@ -219,7 +219,6 @@
             });
         }
 
-        // بناء العقد الشجرية وربط حركة المفصل بالحاوية لمنع الانفصال تماماً
         function createBoneElement(boneName, bonesDict) {
             const bone = bonesDict[boneName];
             const rot = boneRotations[boneName] || 0;
@@ -228,7 +227,6 @@
             nodeDiv.className = 'bone-node';
             nodeDiv.style.zIndex = bone.zIndex;
 
-            // تحديد نقطة ارتكاز المفصل ودوران الحاوية بالكامل لضمان عدم انفصال الأطراف عن الكتف/الحوض
             if (bone.origin === 'top center') {
                 nodeDiv.style.transformOrigin = 'top center';
             } else if (bone.origin === 'bottom center') {
@@ -237,7 +235,6 @@
                 nodeDiv.style.transformOrigin = 'center center';
             }
 
-            // دمج الإحداثيات والدوران في مصفوفة التحويل للحفاظ على الترابط الهيكلي
             nodeDiv.style.transform = `translate(${bone.x}px, ${bone.y}px) rotate(${rot}deg)`;
 
             const img = document.createElement('img');
@@ -245,7 +242,6 @@
             img.className = 'body-part';
             img.style.width = bone.width + 'px';
             
-            // محاذاة الصورة داخل عقدة المفصل حسب نقطة الارتكاز التشريحية
             if (bone.origin === 'top center') {
                 img.style.left = '50%';
                 img.style.top = '0';
@@ -262,7 +258,6 @@
             
             nodeDiv.appendChild(img);
 
-            // تتبّع الأبناء وربطهم شجرياً
             if (bone.children && bone.children.length > 0) {
                 bone.children.forEach(childName => {
                     nodeDiv.appendChild(createBoneElement(childName, bonesDict));
