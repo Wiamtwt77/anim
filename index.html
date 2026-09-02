@@ -124,7 +124,7 @@
     </div>
 
     <script>
-        // هيكل بيانات الشخصية (مع تعديل إحداثيات الذراعين للاندماج بالكتف وترتيب الطبقات بدقة)
+        // هيكل بيانات الشخصية (مع ضبط طبقات Z-Index وترتيب: الرأس أولاً، تحته الصدر والذراعان، وتحتهم الأرجل)
         const charactersData = [
             {
                 id: "hero_mascot",
@@ -136,7 +136,7 @@
                         width: 74,
                         x: 0,
                         y: -32,
-                        zIndex: 3, // تحت الرأس
+                        zIndex: 3, // الطبقة الوسطى (مع الصدر والذراعان)
                         origin: "center center",
                         minRot: -20, maxRot: 20,
                         children: ["head", "right_arm", "left_arm", "right_leg", "left_leg"]
@@ -146,7 +146,7 @@
                         width: 88,
                         x: 0,
                         y: -55,
-                        zIndex: 4, // الطبقة الأولى (في الأعلى تماماً)
+                        zIndex: 4, // الطبقة الأولى في الأعلى تماماً
                         origin: "bottom center",
                         minRot: -45, maxRot: 45,
                         children: []
@@ -154,9 +154,9 @@
                     right_arm: {
                         src: "./res/right_arm.png",
                         width: 32,
-                        x: 25, // تم تقريبها وتثبيتها عند منطقة الكتف بدقة
+                        x: 25,
                         y: -38,
-                        zIndex: 3, // مع الصدر وتحت الرأس
+                        zIndex: 3, // في نفس طبقة الصدر وتحت الرأس، ومركز الدوران هو مفصل الكتف
                         origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
@@ -164,9 +164,9 @@
                     left_arm: {
                         src: "./res/left_arm.png",
                         width: 32,
-                        x: -25, // تم تقريبها وتثبيتها عند منطقة الكتف بدقة
+                        x: -25,
                         y: -38,
-                        zIndex: 3, // مع الصدر وتحت الرأس
+                        zIndex: 3, // في نفس طبقة الصدر وتحت الرأس، ومركز الدوران هو مفصل الكتف
                         origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
@@ -176,7 +176,7 @@
                         width: 32,
                         x: 18,
                         y: 40,
-                        zIndex: 1, // تحتهم كلهم (في الأسفل)
+                        zIndex: 1, // تحتهم كلهم في الأسفل
                         origin: "top center",
                         minRot: -45, maxRot: 45,
                         children: []
@@ -186,7 +186,7 @@
                         width: 25,
                         x: -15,
                         y: 40,
-                        zIndex: 1, // تحتهم كلهم (في الأسفل)
+                        zIndex: 1, // تحتهم كلهم في الأسفل
                         origin: "top center",
                         minRot: -45, maxRot: 45,
                         children: []
