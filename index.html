@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Upload Studio - النظام الهيكلي المكتمل</title>
+    <title>Twencraft Upload Studio - النظام الهيكلي مع مكتبة الوضعيات</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -31,7 +31,7 @@
             border-radius: 8px;
             width: 340px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            max-height: 550px;
+            max-height: 600px;
             overflow-y: auto;
         }
         .stage-container {
@@ -88,8 +88,8 @@
             pointer-events: none;
         }
         .bone-control {
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
             border-bottom: 1px solid #444;
             font-size: 13px;
         }
@@ -98,16 +98,26 @@
             justify-content: space-between;
             color: #4CAF50;
             font-weight: bold;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
+        }
+        .pose-section {
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #444;
         }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <!-- لوحة التحكم الهيكلي للمفاصل الستة -->
+        <!-- لوحة التحكم الهيكلي ومكتبة الوضعيات -->
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">نظام الهيكل العظمي (6 مفاصل متصلة)</div>
+            <div class="pose-section">
+                <div style="font-weight: bold; margin-bottom: 8px; color: #ffeb3b; font-size: 14px;">مكتبة الوضعيات الجاهزة</div>
+                <select id="poseSelect"></select>
+            </div>
+            
+            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b; font-size: 14px;">التحكم اليدوي بالمفاصل الستة</div>
             <div id="bonesControls"></div>
         </div>
 
@@ -124,7 +134,7 @@
     </div>
 
     <script>
-        // هيكل بيانات الشخصية (مع ضبط طبقات Z-Index وترتيب: الرأس أولاً، تحته الصدر والذراعان، وتحتهم الأرجل)
+        // هيكل بيانات الشخصية (مع طبقات Z-Index الدقيقة ومراكز الدوران)
         const charactersData = [
             {
                 id: "hero_mascot",
@@ -136,7 +146,7 @@
                         width: 74,
                         x: 0,
                         y: -32,
-                        zIndex: 3, // الطبقة الوسطى (مع الصدر والذراعان)
+                        zIndex: 3,
                         origin: "center center",
                         minRot: -20, maxRot: 20,
                         children: ["head", "right_arm", "left_arm", "right_leg", "left_leg"]
@@ -146,7 +156,7 @@
                         width: 88,
                         x: 0,
                         y: -55,
-                        zIndex: 4, // الطبقة الأولى في الأعلى تماماً
+                        zIndex: 4,
                         origin: "bottom center",
                         minRot: -45, maxRot: 45,
                         children: []
@@ -156,7 +166,7 @@
                         width: 32,
                         x: 25,
                         y: -38,
-                        zIndex: 3, // في نفس طبقة الصدر وتحت الرأس، ومركز الدوران هو مفصل الكتف
+                        zIndex: 3,
                         origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
@@ -166,7 +176,7 @@
                         width: 32,
                         x: -25,
                         y: -38,
-                        zIndex: 3, // في نفس طبقة الصدر وتحت الرأس، ومركز الدوران هو مفصل الكتف
+                        zIndex: 3,
                         origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
@@ -176,7 +186,7 @@
                         width: 32,
                         x: 18,
                         y: 40,
-                        zIndex: 1, // تحتهم كلهم في الأسفل
+                        zIndex: 1,
                         origin: "top center",
                         minRot: -45, maxRot: 45,
                         children: []
@@ -186,13 +196,23 @@
                         width: 25,
                         x: -15,
                         y: 40,
-                        zIndex: 1, // تحتهم كلهم في الأسفل
+                        zIndex: 1,
                         origin: "top center",
                         minRot: -45, maxRot: 45,
                         children: []
                     }
                 }
             }
+        ];
+
+        // مكتبة الوضعيات الجاهزة والمنظمة
+        const posesLibrary = [
+            { name: "الوضع الافتراضي (Default Stand)", rotations: { torso: 0, head: 0, right_arm: 0, left_arm: 0, right_leg: 0, left_leg: 0 } },
+            { name: "التلويح باليد (Waving Hello)", rotations: { torso: 5, head: 5, right_arm: -75, left_arm: 15, right_leg: 0, left_leg: 0 } },
+            { name: "وضع القتال والهجوم (Combat Stance)", rotations: { torso: -10, head: 10, right_arm: -45, left_arm: -45, right_leg: 20, left_leg: -20 } },
+            { name: "الوقفة العسكرية المستقيمة (Attention)", rotations: { torso: 0, head: 0, right_arm: 10, left_arm: -10, right_leg: 0, left_leg: 0 } },
+            { name: "وضع الاسترخاء والانحناء (Relaxed Bow)", rotations: { torso: 15, head: -15, right_arm: 25, left_arm: -25, right_leg: -10, left_leg: 10 } },
+            { name: "وضع القفز والحماس (Action Jump)", rotations: { torso: -5, head: -10, right_arm: -60, left_arm: -60, right_leg: 30, left_leg: 30 } }
         ];
 
         let activeCharacterIndex = 0;
@@ -207,6 +227,7 @@
 
         const rigContainer = document.getElementById('characterRig');
         const characterSelect = document.getElementById('characterSelect');
+        const poseSelect = document.getElementById('poseSelect');
         const bonesControls = document.getElementById('bonesControls');
 
         function initLibrary() {
@@ -216,6 +237,14 @@
                 opt.value = index;
                 opt.textContent = char.name;
                 characterSelect.appendChild(opt);
+            });
+
+            poseSelect.innerHTML = '';
+            posesLibrary.forEach((pose, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = pose.name;
+                poseSelect.appendChild(opt);
             });
         }
 
@@ -299,9 +328,22 @@
             });
         }
 
+        // تطبيق الوضعية المحددة وتحديث قيم الـ Sliders تلقائياً
+        poseSelect.addEventListener('change', (e) => {
+            const poseIndex = parseInt(e.target.value);
+            const selectedPose = posesLibrary[poseIndex];
+            
+            if (selectedPose) {
+                boneRotations = { ...selectedPose.rotations };
+                buildBoneControls();
+                renderCharacter();
+            }
+        });
+
         characterSelect.addEventListener('change', (e) => {
             activeCharacterIndex = parseInt(e.target.value);
             Object.keys(boneRotations).forEach(k => boneRotations[k] = 0);
+            poseSelect.value = 0;
             buildBoneControls();
             renderCharacter();
         });
