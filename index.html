@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Upload & Animation Studio - تحكم كامل بالأبعاد</title>
+    <title>Twencraft Custom Studio - محرر الأبعاد والإحداثيات اليدوي</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -20,7 +20,7 @@
         .app-container {
             display: flex;
             gap: 20px;
-            max-width: 1180px;
+            max-width: 1200px;
             width: 100%;
             justify-content: center;
             flex-wrap: wrap;
@@ -93,7 +93,7 @@
         .upload-slot {
             background: #252525;
             padding: 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             margin-bottom: 12px;
             border: 1px solid #333;
         }
@@ -104,25 +104,32 @@
             margin-bottom: 4px;
             font-size: 13px;
         }
-        .upload-slot span {
-            display: block;
-            font-size: 11px;
-            color: #aaa;
-            margin-bottom: 6px;
-        }
-        .size-sliders {
-            display: flex;
-            gap: 10px;
+        .sliders-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
             margin-top: 8px;
-            align-items: center;
-            font-size: 11px;
-            color: #ccc;
         }
-        .size-sliders input[type="range"] {
-            flex: 1;
+        .slider-field {
+            display: flex;
+            flex-direction: column;
+            font-size: 11px;
+            color: #bbb;
+        }
+        .slider-field span {
+            display: flex;
+            justify-content: space-between;
+            color: #ffeb3b;
+            margin-bottom: 2px;
+        }
+        .slider-field input[type="range"] {
+            width: 100%;
+            background: #333;
+            height: 5px;
+            border-radius: 3px;
             accent-color: #4CAF50;
         }
-        /* الهيكل العظمي والمجسمات المرتبطة */
+        /* الهيكل العظمي والمجسمات */
         .character-rig {
             position: relative;
             width: 0;
@@ -143,20 +150,19 @@
 <body>
 
     <div class="app-container">
-        <!-- لوحة رفع الصور والتحكم بالقياسات لكل عظمة -->
+        <!-- لوحة التحكم الكاملة بالأبعاد، الملفات، والإحداثيات -->
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b; font-size: 15px;">استوديو رفع وتعديل مقاسات العظام</div>
+            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b; font-size: 15px;">لوحة تحكم وتعديل العظام يدوياً</div>
             <div style="font-size: 12px; color: #ccc; margin-bottom: 15px; line-height: 1.5;">
-                ارفع الصور وعدّل أبعاد العرض (العرض والارتفاع) لكل جزء بشكل مباشر لتتناسب تماماً مع هيكلك.
+                ارفع الصور وعدّل الأحجام والإحداثيات (X, Y) بشكل مباشر لتتطابق مع هيكلك تماماً.
             </div>
-
             <div id="uploadSlotsContainer"></div>
         </div>
 
         <div class="stage-container">
             <div class="top-bar">
                 <div class="control-group">
-                    <label for="animSelect">مكتبة التحركات العضوية السلسة:</label>
+                    <label for="animSelect">مكتبة التحركات العضوية:</label>
                     <select id="animSelect">
                         <option value="idle">تنفس واستعداد هادئ (Organic Idle)</option>
                         <option value="walk">مشية احترافية مرنة (Fluid Walk)</option>
@@ -176,73 +182,61 @@
     </div>
 
     <script>
+        // تعريف هيكل العظام مع إمكانية تعديل الأبعاد والإحداثيات بدقة عبر اللوحات
         const bonesConfig = {
             torso: {
                 name: "الجذع الأساسي (Torso)",
-                x: 0, y: -20,
-                origin: "center center",
-                zIndex: 2,
-                defaultWidth: 90, defaultHeight: 130,
+                width: 90, height: 130, x: 0, y: -20,
+                origin: "center center", zIndex: 2,
+                minW: 20, maxW: 200, minH: 20, maxH: 250, minX: -100, maxX: 100, minY: -150, maxY: 150,
                 defaultImg: generatePlaceholderDataURL('الجذع', '#4CAF50', 90, 130),
                 children: ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg']
             },
             head: {
                 name: "الرأس (Head)",
-                x: 0, y: -75,
-                origin: "bottom center",
-                zIndex: 3,
-                defaultWidth: 90, defaultHeight: 90,
+                width: 90, height: 90, x: 0, y: -75,
+                origin: "bottom center", zIndex: 3,
+                minW: 20, maxW: 180, minH: 20, maxH: 180, minX: -100, maxX: 100, minY: -150, maxY: 0,
                 defaultImg: generatePlaceholderDataURL('الرأس', '#ffccbc', 90, 90),
                 children: []
             },
             r_arm: {
                 name: "الذراع اليمنى (Right Arm)",
-                x: 35, y: -50,
-                origin: "top center",
-                zIndex: 2,
-                defaultWidth: 35, defaultHeight: 100,
+                width: 35, height: 100, x: 35, y: -50,
+                origin: "top center", zIndex: 2,
+                minW: 10, maxW: 100, minH: 20, maxH: 200, minX: -50, maxX: 120, minY: -120, maxY: 100,
                 defaultImg: generatePlaceholderDataURL('ذراع يمنى', '#66bb6a', 35, 100),
                 children: []
             },
             l_arm: {
                 name: "الذراع اليسرى (Left Arm)",
-                x: -35, y: -50,
-                origin: "top center",
-                zIndex: 2,
-                defaultWidth: 35, defaultHeight: 100,
+                width: 35, height: 100, x: -35, y: -50,
+                origin: "top center", zIndex: 2,
+                minW: 10, maxW: 100, minH: 20, maxH: 200, minX: -120, maxX: 50, minY: -120, maxY: 100,
                 defaultImg: generatePlaceholderDataURL('ذراع يسرى', '#66bb6a', 35, 100),
                 children: []
             },
             r_leg: {
                 name: "الرجل اليمنى (Right Leg)",
-                x: 20, y: 60,
-                origin: "top center",
-                zIndex: 1,
-                defaultWidth: 40, defaultHeight: 110,
+                width: 40, height: 110, x: 20, y: 60,
+                origin: "top center", zIndex: 1,
+                minW: 10, maxW: 100, minH: 20, maxH: 220, minX: -50, maxX: 100, minY: -20, maxY: 150,
                 defaultImg: generatePlaceholderDataURL('رجل يمنى', '#388e3c', 40, 110),
                 children: []
             },
             l_leg: {
                 name: "الرجل اليسرى (Left Leg)",
-                x: -20, y: 60,
-                origin: "top center",
-                zIndex: 1,
-                defaultWidth: 40, defaultHeight: 110,
+                width: 40, height: 110, x: -20, y: 60,
+                origin: "top center", zIndex: 1,
+                minW: 10, maxW: 100, minH: 20, maxH: 220, minX: -100, maxX: 50, minY: -20, maxY: 150,
                 defaultImg: generatePlaceholderDataURL('رجل يسرى', '#388e3c', 40, 110),
                 children: []
             }
         };
 
-        // تخزين الصور والأبعاد الديناميكية لكل عظمة
         let boneImages = {};
-        let boneDimensions = {};
-
         for (let key in bonesConfig) {
             boneImages[key] = bonesConfig[key].defaultImg;
-            boneDimensions[key] = {
-                width: bonesConfig[key].defaultWidth,
-                height: bonesConfig[key].defaultHeight
-            };
         }
 
         let boneAngles = { torso: 0, head: 0, r_arm: 0, l_arm: 0, r_leg: 0, l_leg: 0 };
@@ -259,7 +253,7 @@
             canvas.height = h;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = color;
-            ctx.roundRect ? ctx.roundRect(0, 0, w, h, 10) : ctx.fillRect(0, 0, w, h);
+            ctx.roundRect ? ctx.roundRect(0, 0, w, h, 8) : ctx.fillRect(0, 0, w, h);
             ctx.fill();
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 2;
@@ -273,32 +267,40 @@
             return canvas.toDataURL();
         }
 
-        // بناء حقول الرفع مع سلايدرات التحكم في الحجم الفوري لكل جزء
+        // بناء حقول التحكم المخصصة (ملف + أشرطة تمرير الحجم والأبعاد والإحداثيات)
         function buildUploadSlots() {
             const container = document.getElementById('uploadSlotsContainer');
             container.innerHTML = '';
 
             for (let [key, config] of Object.entries(bonesConfig)) {
-                const dim = boneDimensions[key];
                 const slot = document.createElement('div');
                 slot.className = 'upload-slot';
                 slot.innerHTML = `
                     <label>${config.name}</label>
-                    <span>رفع صورة الجزء (PNG):</span>
                     <input type="file" accept="image/png, image/jpeg" data-bone="${key}" style="margin-bottom: 8px;">
-                    <div class="size-sliders">
-                        <span>عرض: <b id="val_w_${key}">${dim.width}</b>px</span>
-                        <input type="range" min="10" max="200" value="${dim.width}" data-bone-w="${key}">
-                    </div>
-                    <div class="size-sliders">
-                        <span>ارتفاع: <b id="val_h_${key}">${dim.height}</b>px</span>
-                        <input type="range" min="10" max="250" value="${dim.height}" data-bone-h="${key}">
+                    <div class="sliders-grid">
+                        <div class="slider-field">
+                            <span>العرض: <b id="val_w_${key}">${config.width}px</b></span>
+                            <input type="range" min="${config.minW}" max="${config.maxW}" value="${config.width}" data-bone="${key}" data-prop="width">
+                        </div>
+                        <div class="slider-field">
+                            <span>الارتفاع: <b id="val_h_${key}">${config.height}px</b></span>
+                            <input type="range" min="${config.minH}" max="${config.maxH}" value="${config.height}" data-bone="${key}" data-prop="height">
+                        </div>
+                        <div class="slider-field">
+                            <span>موقع X: <b id="val_x_${key}">${config.x}</b></span>
+                            <input type="range" min="${config.minX}" max="${config.maxX}" value="${config.x}" data-bone="${key}" data-prop="x">
+                        </div>
+                        <div class="slider-field">
+                            <span>موقع Y: <b id="val_y_${key}">${config.y}</b></span>
+                            <input type="range" min="${config.minY}" max="${config.maxY}" value="${config.y}" data-bone="${key}" data-prop="y">
+                        </div>
                     </div>
                 `;
                 container.appendChild(slot);
             }
 
-            // أحداث رفع الملفات
+            // مستمعات رفع الصور
             container.querySelectorAll('input[type="file"]').forEach(input => {
                 input.addEventListener('change', (e) => {
                     const boneKey = e.target.dataset.bone;
@@ -306,26 +308,22 @@
                     if (file) {
                         const url = URL.createObjectURL(file);
                         boneImages[boneKey] = url;
+                        initRigDOM();
                     }
                 });
             });
 
-            // أحداث تعديل العرض والارتفاع الفوري
+            // مستمعات أشرطة التمرير لتعديل الحجم والإحداثيات فورياً
             container.querySelectorAll('input[type="range"]').forEach(slider => {
                 slider.addEventListener('input', (e) => {
-                    const wKey = e.target.dataset.boneW;
-                    const hKey = e.target.dataset.boneH;
-
-                    if (wKey) {
-                        const val = parseInt(e.target.value);
-                        boneDimensions[wKey].width = val;
-                        document.getElementById(`val_w_${wKey}`).textContent = val;
-                    }
-                    if (hKey) {
-                        const val = parseInt(e.target.value);
-                        boneDimensions[hKey].height = val;
-                        document.getElementById(`val_h_${hKey}`).textContent = val;
-                    }
+                    const boneKey = e.target.dataset.bone;
+                    const prop = e.target.dataset.prop;
+                    const val = parseInt(e.target.value);
+                    
+                    bonesConfig[boneKey][prop] = val;
+                    document.getElementById(`val_${prop === 'width' ? 'w' : prop === 'height' ? 'h' : prop}_${boneKey}`).textContent = val + (prop === 'width' || prop === 'height' ? 'px' : '');
+                    
+                    initRigDOM();
                 });
             });
         }
@@ -375,16 +373,23 @@
 
         function initRigDOM() {
             rigContainer.innerHTML = '';
+            const torsoConfig = bonesConfig.torso;
+            
             const torsoDiv = document.createElement('div');
             torsoDiv.className = 'bone-node';
             torsoDiv.id = 'bone_torso';
-            torsoDiv.style.zIndex = bonesConfig.torso.zIndex;
+            torsoDiv.style.zIndex = torsoConfig.zIndex;
             
             const torsoImg = document.createElement('img');
+            torsoImg.src = boneImages.torso;
             torsoImg.className = 'body-part-img';
-            torsoImg.id = 'img_torso';
+            torsoImg.style.width = torsoConfig.width + 'px';
+            torsoImg.style.height = torsoConfig.height + 'px';
+            torsoImg.style.left = `-${torsoConfig.width / 2}px`;
+            torsoImg.style.top = `-${torsoConfig.height / 2}px`;
             torsoDiv.appendChild(torsoImg);
 
+            // إضافة الأطراف كعناصر أبنة
             ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg'].forEach(bName => {
                 const bConfig = bonesConfig[bName];
                 const bDiv = document.createElement('div');
@@ -394,12 +399,16 @@
                 bDiv.style.transformOrigin = bConfig.origin;
                 
                 const bImg = document.createElement('img');
+                bImg.src = boneImages[bName];
                 bImg.className = 'body-part-img';
-                bImg.id = `img_${bName}`;
+                bImg.style.width = bConfig.width + 'px';
+                bImg.style.height = bConfig.height + 'px';
                 
                 if (bConfig.origin === 'top center') {
+                    bImg.style.left = `-${bConfig.width / 2}px`;
                     bImg.style.top = '0px';
                 } else if (bConfig.origin === 'bottom center') {
+                    bImg.style.left = `-${bConfig.width / 2}px`;
                     bImg.style.bottom = '0px';
                 }
                 bDiv.appendChild(bImg);
@@ -412,37 +421,15 @@
         function animationLoop() {
             updatePhysics();
             
-            // تحديث الأبعاد والرسومات الحية لكل إطار
-            for (let key in bonesConfig) {
-                const imgEl = document.getElementById(`img_${key}`);
-                const dim = boneDimensions[key];
-                if (imgEl) {
-                    if (imgEl.src !== boneImages[key]) {
-                        imgEl.src = boneImages[key];
-                    }
-                    imgEl.style.width = dim.width + 'px';
-                    imgEl.style.height = dim.height + 'px';
-                    
-                    const config = bonesConfig[key];
-                    if (config.origin === 'center center') {
-                        imgEl.style.left = `-${dim.width / 2}px`;
-                        imgEl.style.top = `-${dim.height / 2}px`;
-                    } else if (config.origin === 'top center') {
-                        imgEl.style.left = `-${dim.width / 2}px`;
-                    } else if (config.origin === 'bottom center') {
-                        imgEl.style.left = `-${dim.width / 2}px`;
-                    }
-                }
-            }
-
-            // تحديث تحويلات العظام الحركية العضوية
             const torsoDiv = document.getElementById('bone_torso');
             if (torsoDiv) {
+                const torsoConfig = bonesConfig.torso;
                 let extraY = Math.sin(animTime * 0.08) * 3;
-                torsoDiv.style.transform = `translate(${bonesConfig.torso.x}px, ${bonesConfig.torso.y + extraY}px) rotate(${boneAngles.torso}rad)`;
+                torsoDiv.style.transform = `translate(${torsoConfig.x}px, ${torsoConfig.y + extraY}px) rotate(${boneAngles.torso}rad)`;
                 
-                ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg'].forEach((bName, index) => {
-                    const bDiv = document.getElementById(`bone_${bName}`);
+                // تحديث الأطراف المتصلة بناءً على الإحداثيات والحجم المحدث يدوياً
+                ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg'].forEach((bName, idx) => {
+                    const bDiv = torsoDiv.children[idx + 1];
                     const bConfig = bonesConfig[bName];
                     if (bDiv) {
                         bDiv.style.transform = `translate(${bConfig.x}px, ${bConfig.y}px) rotate(${boneAngles[bName]}rad)`;
