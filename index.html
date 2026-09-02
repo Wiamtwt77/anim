@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Studio - محرك العظام الحقيقي (Skeletal Rigging)</title>
+    <title>Twencraft Upload & Animation Studio - نظام الهيكل العظمي المخصص</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -20,18 +20,18 @@
         .app-container {
             display: flex;
             gap: 20px;
-            max-width: 1050px;
+            max-width: 1150px;
             width: 100%;
             justify-content: center;
             flex-wrap: wrap;
         }
         .sidebar {
-            background: #222;
+            background: #1f1f1f;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 10px;
             width: 380px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            max-height: 620px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            max-height: 650px;
             overflow-y: auto;
             border: 1px solid #333;
         }
@@ -41,16 +41,15 @@
             align-items: center;
             gap: 15px;
         }
-        .library-bar {
-            background: #222;
+        .top-bar {
+            background: #1f1f1f;
             padding: 12px 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             width: 100%;
             display: flex;
             gap: 15px;
             align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            flex-wrap: wrap;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
             border: 1px solid #333;
         }
         .control-group {
@@ -61,15 +60,16 @@
             font-size: 12px;
             color: #ffeb3b;
         }
-        select, input[type="range"], button {
+        select, button, input[type="file"] {
             width: 100%;
             background: #2a2a2a;
             color: #fff;
             border: 1px solid #444;
             padding: 8px;
-            border-radius: 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
         }
-        select, button { cursor: pointer; }
         button {
             background: #4CAF50;
             font-weight: bold;
@@ -78,10 +78,10 @@
         }
         button:hover { background: #45a049; }
         .stage {
-            width: 420px;
-            height: 520px;
-            background: #1e1e1e;
-            border: 2px solid #333;
+            width: 440px;
+            height: 540px;
+            background: #1a1a1a;
+            border: 2px dashed #444;
             border-radius: 12px;
             position: relative;
             display: flex;
@@ -90,372 +90,420 @@
             overflow: hidden;
             box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
         }
-        canvas {
-            display: block;
+        .upload-slot {
+            background: #252525;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #333;
         }
-        .bone-control {
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #333;
+        .upload-slot label {
+            display: block;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 4px;
             font-size: 13px;
         }
-        .bone-control label {
-            display: flex;
-            justify-content: space-between;
-            color: #4CAF50;
-            font-weight: bold;
+        .upload-slot span {
+            display: block;
+            font-size: 11px;
+            color: #aaa;
             margin-bottom: 6px;
         }
-        .checkbox-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-            font-size: 13px;
-            color: #ccc;
-            cursor: pointer;
+        /* الهيكل العظمي والمجسمات المرتبطة */
+        .character-rig {
+            position: relative;
+            width: 0;
+            height: 0;
+        }
+        .bone-node {
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+        .body-part-img {
+            position: absolute;
+            user-select: none;
+            pointer-events: none;
+            transform-origin: top center;
         }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <!-- لوحة التحكم بالعظام الحقيقية والتحركات -->
+        <!-- لوحة رفع الصور وإدارة الأبعاد -->
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b; font-size: 15px;">إدارة هيكل العظام (Matrix Rigging)</div>
-            <label class="checkbox-row">
-                <input type="checkbox" id="showSkeleton" checked> إاظهار الهيكل العظمي تحت المجسم
-            </label>
-            <hr style="border-color: #333; margin: 12px 0;">
-            <div id="bonesControls"></div>
+            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b; font-size: 15px;">استوديو رفع وتخصيص العظام</div>
+            <div style="font-size: 12px; color: #ccc; margin-bottom: 15px; line-height: 1.5;">
+                قم برفع صور أجزاء الشخصية بالشفافية (PNG). الحبيبات تتكيف تلقائياً مع محرك العظام العضوي المرن.
+            </div>
+
+            <div id="uploadSlotsContainer"></div>
         </div>
 
         <div class="stage-container">
-            <div class="library-bar">
+            <div class="top-bar">
                 <div class="control-group">
-                    <label for="animSelect">مكتبة التحركات العضوية:</label>
-                    <select id="animSelect"></select>
+                    <label for="animSelect">مكتبة التحركات العضوية السلسة:</label>
+                    <select id="animSelect">
+                        <option value="idle">تنفس واستعداد هادئ (Organic Idle)</option>
+                        <option value="walk">مشية احترافية مرنة (Fluid Walk)</option>
+                        <option value="dance">رقصة حماسية متأرجحة (Dynamic Dance)</option>
+                    </select>
                 </div>
                 <div style="width: 110px;">
                     <label style="opacity: 0;">تشغيل</label>
-                    <button id="toggleAnimBtn">إيقاف مؤقت</button>
+                    <button id="toggleBtn">إيقاف مؤقت</button>
                 </div>
             </div>
 
             <div class="stage">
-                <canvas id="rigCanvas" width="420" height="520"></canvas>
+                <div class="character-rig" id="characterRig"></div>
             </div>
         </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('rigCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // تحميل الصور المرتبطة بالعظام
-        const images = {};
-        const imageSources = {
-            torso: "./res/torso.png",
-            head: "./res/head.png",
-            right_arm: "./res/right_arm.png",
-            left_arm: "./res/left_arm.png",
-            right_leg: "./res/right_leg.png",
-            left_leg: "./res/left_leg.png"
-        };
-
-        let imagesLoaded = false;
-        let loadedCount = 0;
-        const totalImages = Object.keys(imageSources).length;
-
-        for (let key in imageSources) {
-            images[key] = new Image();
-            images[key].src = imageSources[key];
-            images[key].onload = () => {
-                loadedCount++;
-                if (loadedCount === totalImages) {
-                    imagesLoaded = true;
-                    requestAnimationFrame(gameLoop);
-                }
-            };
-        }
-
-        // هيكل العظام الحقيقي (Parent-Child Bone Hierarchy with Matrix Bindings)
-        const skeleton = {
+        // تعريف بيانات المفاصل والعظام مع الأبعاد المقترحة وخصائص الربط
+        const bonesConfig = {
             torso: {
-                x: 210, y: 240, length: 0, rot: 0, minRot: -30, maxRot: 30,
-                imageKey: 'torso', width: 74, offsetX: 0, offsetY: -32,
-                children: ['head', 'right_arm', 'left_arm', 'right_leg', 'left_leg']
+                name: "الجذع الأساسي (Torso)",
+                suggestedSize: "عرض 90px × ارتفاع 130px",
+                width: 90, height: 130,
+                x: 0, y: -20,
+                origin: "center center",
+                zIndex: 2,
+                defaultImg: generatePlaceholderDataURL('الجذع', '#4CAF50', 90, 130),
+                children: ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg']
             },
             head: {
-                parent: 'torso', x: 0, y: -32, length: 45, rot: 0, minRot: -45, maxRot: 45,
-                imageKey: 'head', width: 88, offsetX: 0, offsetY: -55,
+                name: "الرأس (Head)",
+                suggestedSize: "عرض 90px × ارتفاع 90px",
+                width: 90, height: 90,
+                x: 0, y: -75,
+                origin: "bottom center",
+                zIndex: 3,
+                defaultImg: generatePlaceholderDataURL('الرأس', '#ffccbc', 90, 90),
                 children: []
             },
-            right_arm: {
-                parent: 'torso', x: 25, y: -25, length: 50, rot: 0, minRot: -160, maxRot: 160,
-                imageKey: 'right_arm', width: 32, offsetX: 0, offsetY: 0, // ربط من مفصل الكتف تماماً
+            r_arm: {
+                name: "الذراع اليمنى (Right Arm)",
+                suggestedSize: "عرض 35px × ارتفاع 100px",
+                width: 35, height: 100,
+                x: 35, y: -50,
+                origin: "top center",
+                zIndex: 2,
+                defaultImg: generatePlaceholderDataURL('ذراع يمنى', '#66bb6a', 35, 100),
                 children: []
             },
-            left_arm: {
-                parent: 'torso', x: -25, y: -25, length: 50, rot: 0, minRot: -160, maxRot: 160,
-                imageKey: 'left_arm', width: 32, offsetX: 0, offsetY: 0,
+            l_arm: {
+                name: "الذراع اليسرى (Left Arm)",
+                suggestedSize: "عرض 35px × ارتفاع 100px",
+                width: 35, height: 100,
+                x: -35, y: -50,
+                origin: "top center",
+                zIndex: 2,
+                defaultImg: generatePlaceholderDataURL('ذراع يسرى', '#66bb6a', 35, 100),
                 children: []
             },
-            right_leg: {
-                parent: 'torso', x: 18, y: 35, length: 60, rot: 0, minRot: -80, maxRot: 80,
-                imageKey: 'right_leg', width: 32, offsetX: 0, offsetY: 0,
+            r_leg: {
+                name: "الرجل اليمنى (Right Leg)",
+                suggestedSize: "عرض 40px × ارتفاع 110px",
+                width: 40, height: 110,
+                x: 20, y: 60,
+                origin: "top center",
+                zIndex: 1,
+                defaultImg: generatePlaceholderDataURL('رجل يمنى', '#388e3c', 40, 110),
                 children: []
             },
-            left_leg: {
-                parent: 'torso', x: -15, y: 35, length: 60, rot: 0, minRot: -80, maxRot: 80,
-                imageKey: 'left_leg', width: 25, offsetX: 0, offsetY: 0,
+            l_leg: {
+                name: "الرجل اليسرى (Left Leg)",
+                suggestedSize: "عرض 40px × ارتفاع 110px",
+                width: 40, height: 110,
+                x: -20, y: 60,
+                origin: "top center",
+                zIndex: 1,
+                defaultImg: generatePlaceholderDataURL('رجل يسرى', '#388e3c', 40, 110),
                 children: []
             }
         };
 
-        // مكتبة الحركات السلسة المحدثة لنظام العظام
-        const animationsLibrary = {
-            none: { name: "تحكم يدوي بالعظام (حر)", frames: [] },
-            idle: {
-                name: "تنفس عضوي هادئ",
-                duration: 90,
-                keyframes: [
-                    { frame: 0, rot: { torso: 0, head: 0, right_arm: 5, left_arm: -5, right_leg: 0, left_leg: 0 } },
-                    { frame: 45, rot: { torso: 2, head: 4, right_arm: 12, left_arm: -12, right_leg: 3, left_leg: -3 } },
-                    { frame: 90, rot: { torso: 0, head: 0, right_arm: 5, left_arm: -5, right_leg: 0, left_leg: 0 } }
-                ]
-            },
-            wave: {
-                name: "تلويح باليد الاحترافي",
-                duration: 60,
-                keyframes: [
-                    { frame: 0, rot: { torso: 0, head: 0, right_arm: 10, left_arm: -10, right_leg: 0, left_leg: 0 } },
-                    { frame: 15, rot: { torso: 5, head: -10, right_arm: -110, left_arm: -10, right_leg: 0, left_leg: 0 } },
-                    { frame: 30, rot: { torso: -5, head: 10, right_arm: -80, left_arm: -10, right_leg: 0, left_leg: 0 } },
-                    { frame: 45, rot: { torso: 5, head: -10, right_arm: -110, left_arm: -10, right_leg: 0, left_leg: 0 } },
-                    { frame: 60, rot: { torso: 0, head: 0, right_arm: 10, left_arm: -10, right_leg: 0, left_leg: 0 } }
-                ]
-            },
-            walk: {
-                name: "مشية احترافية متقدمة",
-                duration: 40,
-                keyframes: [
-                    { frame: 0, rot: { torso: 3, head: 0, right_arm: 45, left_arm: -45, right_leg: -35, left_leg: 35 } },
-                    { frame: 10, rot: { torso: 0, head: 4, right_arm: 15, left_arm: -15, right_leg: 0, left_leg: 0 } },
-                    { frame: 20, rot: { torso: -3, head: 0, right_arm: -45, left_arm: 45, right_leg: 35, left_leg: -35 } },
-                    { frame: 30, rot: { torso: 0, head: -4, right_arm: -15, left_arm: 15, right_leg: 0, left_leg: 0 } },
-                    { frame: 40, rot: { torso: 3, head: 0, right_arm: 45, left_arm: -45, right_leg: -35, left_leg: 35 } }
-                ]
-            }
+        // تخزين روابط الصور الحالية (مبدئياً الأشكال الافتراضية)
+        let boneImages = {};
+        for (let key in bonesConfig) {
+            boneImages[key] = bonesConfig[key].defaultImg;
+        }
+
+        // إعدادات زوايا العظام الحالية والمستهدفة للتحريك غير الخطي (Spring Physics / Lag)
+        let boneAngles = {
+            torso: 0, head: 0, r_arm: 0, l_arm: 0, r_leg: 0, l_leg: 0
+        };
+        let boneTargetAngles = {
+            torso: 0, head: 0, r_arm: 0, l_arm: 0, r_leg: 0, l_leg: 0
+        };
+        let boneLags = {
+            torso: 0.12, head: 0.15, r_arm: 0.09, l_arm: 0.09, r_leg: 0.1, l_leg: 0.1
         };
 
-        let activeAnimKey = "none";
+        let animTime = 0;
         let isPlaying = true;
-        let currentFrame = 0;
+        let currentPose = 'idle';
 
-        function initUI() {
-            const animSelect = document.getElementById('animSelect');
-            animSelect.innerHTML = '';
-            for (let k in animationsLibrary) {
-                const opt = document.createElement('option');
-                opt.value = k;
-                opt.textContent = animationsLibrary[k].name;
-                animSelect.appendChild(opt);
-            }
+        // دالة مساعدة لإنشاء صور مؤقتة ملونة واضحة في حال لم يرفع المستخدم صورة بعد
+        function generatePlaceholderDataURL(text, color, w, h) {
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = color;
+            ctx.roundRect ? ctx.roundRect(0, 0, w, h, 10) : ctx.fillRect(0, 0, w, h);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#111';
+            ctx.font = 'bold 11px Tahoma';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, w / 2, h / 2);
+            return canvas.toDataURL();
+        }
 
-            const bonesControls = document.getElementById('bonesControls');
-            bonesControls.innerHTML = '';
-            for (let bName in skeleton) {
-                const b = skeleton[bName];
-                const div = document.createElement('div');
-                div.className = 'bone-control';
-                div.innerHTML = `
-                    <label><span>عظمة: ${bName}</span><span id="val_${bName}">${b.rot}°</span></label>
-                    <input type="range" min="${b.minRot}" max="${b.maxRot}" value="${b.rot}" data-bone="${bName}">
+        // بناء حقول الرفع في القائمة الجانبية
+        function buildUploadSlots() {
+            const container = document.getElementById('uploadSlotsContainer');
+            container.innerHTML = '';
+
+            for (let [key, config] of Object.entries(bonesConfig)) {
+                const slot = document.createElement('div');
+                slot.className = 'upload-slot';
+                slot.innerHTML = `
+                    <label>${config.name}</label>
+                    <span>الأبعاد المقترحة: <b>${config.suggestedSize}</b></span>
+                    <input type="file" accept="image/png, image/jpeg" data-bone="${key}">
                 `;
-                bonesControls.appendChild(div);
+                container.appendChild(slot);
             }
 
-            bonesControls.querySelectorAll('input[type="range"]').forEach(slider => {
-                slider.addEventListener('input', (e) => {
-                    if (activeAnimKey === "none") {
-                        const bName = e.target.dataset.bone;
-                        skeleton[bName].rot = parseInt(e.target.value);
-                        document.getElementById(`val_${bName}`).textContent = skeleton[bName].rot + '°';
+            container.querySelectorAll('input[type="file"]').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const boneKey = e.target.dataset.bone;
+                    const file = e.target.files[0];
+                    if (file) {
+                        const url = URL.createObjectURL(file);
+                        boneImages[boneKey] = url;
+                        renderRig();
                     }
                 });
             });
         }
 
-        function easeInOutSine(t) {
-            return -(Math.cos(Math.PI * t) - 1) / 2;
-        }
+        // مكتبة الحركات العضوية (تغذية الزوايا المستهدفة)
+        const poses = {
+            idle: (t) => {
+                boneTargetAngles.torso = Math.sin(t * 0.04) * 0.03;
+                boneTargetAngles.head = Math.sin(t * 0.04) * 0.08;
+                boneTargetAngles.r_arm = 0.1 + Math.sin(t * 0.04) * 0.1;
+                boneTargetAngles.l_arm = -0.1 - Math.sin(t * 0.04) * 0.1;
+                boneTargetAngles.r_leg = 0.05;
+                boneTargetAngles.l_leg = -0.05;
+            },
+            walk: (t) => {
+                boneTargetAngles.torso = Math.sin(t * 0.08) * 0.05;
+                boneTargetAngles.head = Math.sin(t * 0.08) * 0.06;
+                boneTargetAngles.r_arm = Math.sin(t * 0.08) * 0.6;
+                boneTargetAngles.l_arm = -Math.sin(t * 0.08) * 0.6;
+                boneTargetAngles.r_leg = -Math.sin(t * 0.08) * 0.5;
+                boneTargetAngles.l_leg = Math.sin(t * 0.08) * 0.5;
+            },
+            dance: (t) => {
+                boneTargetAngles.torso = Math.sin(t * 0.15) * 0.15;
+                boneTargetAngles.head = Math.cos(t * 0.15) * 0.2;
+                boneTargetAngles.r_arm = -1.5 + Math.sin(t * 0.15) * 0.8;
+                boneTargetAngles.l_arm = 1.5 + Math.cos(t * 0.15) * 0.8;
+                boneTargetAngles.r_leg = Math.sin(t * 0.15) * 0.4;
+                boneTargetAngles.l_leg = -Math.sin(t * 0.15) * 0.4;
+            }
+        };
 
-        function updateAnimation() {
-            if (activeAnimKey !== "none" && isPlaying) {
-                const anim = animationsLibrary[activeAnimKey];
-                currentFrame = (currentFrame + 0.4) % anim.duration;
-                
-                const kfs = anim.keyframes;
-                let p1 = kfs[0], p2 = kfs[1];
-                for (let i = 0; i < kfs.length - 1; i++) {
-                    if (currentFrame >= kfs[i].frame && currentFrame <= kfs[i+1].frame) {
-                        p1 = kfs[i];
-                        p2 = kfs[i+1];
-                        break;
-                    }
+        // محرك القصور الذاتي والنعومة (Lag & Physics Interpolation)
+        function updatePhysics() {
+            if (isPlaying) {
+                animTime += 1;
+                if (poses[currentPose]) {
+                    poses[currentPose](animTime);
                 }
+            }
 
-                const range = p2.frame - p1.frame;
-                const progress = range === 0 ? 0 : (currentFrame - p1.frame) / range;
-                const smooth = easeInOutSine(progress);
-
-                for (let bName in skeleton) {
-                    const r1 = p1.rot[bName] || 0;
-                    const r2 = p2.rot[bName] || 0;
-                    skeleton[bName].rot = Math.round(r1 + (r2 - r1) * smooth);
-
-                    const slider = document.querySelector(`input[data-bone="${bName}"]`);
-                    const valSpan = document.getElementById(`val_${bName}`);
-                    if (slider && valSpan) {
-                        slider.value = skeleton[bName].rot;
-                        valSpan.textContent = skeleton[bName].rot + '°';
-                    }
-                }
+            // تطبيق استيفاء غير خطي يعتمد على القصور الذاتي لتجنب الجمود تماماً
+            for (let key in boneAngles) {
+                let diff = boneTargetAngles[key] - boneAngles[key];
+                boneAngles[key] += diff * (boneLags[key] || 0.1);
             }
         }
 
-        // حساب مصفوفات العظام (Forward Kinematics Matrices Calculation)
-        const computedTransforms = {};
+        // بناء عناصر الهيكل العظمي والمجسمات في DOM
+        const rigContainer = document.getElementById('characterRig');
 
-        function computeBoneTransforms(boneName, parentMatrix) {
-            const bone = skeleton[boneName];
+        function createBoneNodeDOM(boneName) {
+            const config = bonesConfig[boneName];
+            const angle = boneAngles[boneName] || 0;
+
+            const node = document.createElement('div');
+            node.className = 'bone-node';
+            node.style.zIndex = config.zIndex;
+            node.style.transform = `translate(${config.x}px, ${config.y}px) rotate(${angle}rad)`;
+            node.style.transformOrigin = config.origin;
+
+            // إنشاء عنصر الصورة المكيّف مع أبعاد العظمة
+            const img = document.createElement('img');
+            img.src = boneImages[boneName];
+            img.className = 'body-part-img';
+            img.style.width = config.width + 'px';
+            img.style.height = config.height + 'px';
             
-            // تكوين مصفوفة التحويل المحلية للعظمة
-            ctx.save();
-            ctx.translate(parentMatrix.x + bone.x, parentMatrix.y + bone.y);
+            // ضبط نقطة الارتكاز المركزية للصورة بناءً على إعدادات العظمة
+            if (config.origin === 'top center') {
+                img.style.left = `-${config.width / 2}px`;
+                img.style.top = '0px';
+            } else if (config.origin === 'bottom center') {
+                img.style.left = `-${config.width / 2}px`;
+                img.style.bottom = '0px';
+            } else {
+                img.style.left = `-${config.width / 2}px`;
+                img.style.top = `-${config.height / 2}px`;
+            }
+
+            node.appendChild(img);
+
+            // تكرار الأبناء إن وجدوا (مثل الأطراف والرأس داخل الجذع)
+            if (config.children && config.children.length > 0) {
+                config.children.forEach(childName => {
+                    node.appendChild(createBoneNodeDOM(childName));
+                });
+            }
+
+            return node;
+        }
+
+        function renderRig() {
+            rigContainer.innerHTML = '';
+            // الجذر هو الجذع (Torso)
+            const rootNode = createBoneNodeDOM('torso');
+            rigContainer.appendChild(rootNode);
+        }
+
+        // حلقة التحديث المستمرة للرسوم المتحركة
+        function animationLoop() {
+            updatePhysics();
             
-            const totalRot = parentMatrix.rot + bone.rot;
-            ctx.rotate(totalRot * Math.PI / 180);
+            // تحديث التحويلات الهندسية للعظام مباشرة في DOM لأداء سلس للغاية
+            const torsoNode = rigContainer.firstElementChild;
+            if (torsoNode) {
+                // تحديث الجذع وتوابعه بالمواقع والزوايا الجديدة المحسوبة بالفيزياء العضوية
+                updateNodeTransformRecursive(rigContainer.firstElementChild, 'torso');
+            }
 
-            // حفظ الموقع العالمي النهائي لكل عظمة لكي ترسم الصورة فوقها بدقة
-            const globalX = ctx.getTransform().e;
-            const globalY = ctx.getTransform().f;
+            requestAnimationFrame(animationLoop);
+        }
 
-            computedTransforms[boneName] = {
-                x: globalX,
-                y: globalY,
-                rot: totalRot,
-                endX: globalX + Math.sin(totalRot * Math.PI / 180) * bone.length,
-                endY: globalY - Math.cos(totalRot * Math.PI / 180) * bone.length
-            };
+        function updateNodeTransformRecursive(element, boneName) {
+            if (!element) return;
+            const config = bonesConfig[boneName];
+            const angle = boneAngles[boneName] || 0;
 
-            ctx.restore();
+            // تطبيق الحركة مع إزاحة طفيفة في موضع الجذع لإعطاء شعور بالاستعداد والطفو الحيوي
+            let extraX = 0, extraY = 0;
+            if (boneName === 'torso') {
+                extraY = Math.sin(animTime * 0.08) * 3;
+            }
 
-            // تمرير التحويل للأبناء
-            if (bone.children) {
-                bone.children.forEach(childName => {
-                    computeBoneTransforms(childName, {
-                        x: parentMatrix.x + bone.x,
-                        y: parentMatrix.y + bone.y,
-                        rot: totalRot
-                    });
+            element.style.transform = `translate(${config.x + extraX}px, ${config.y + extraY}px) rotate(${angle}rad)`;
+
+            let childIndex = 1; // العنصر 0 هو الـ img
+            if (config.children && config.children.length > 0) {
+                config.children.forEach(childName => {
+                    const childElement = element.children[childIndex];
+                    if (childElement) {
+                        updateNodeTransformRecursive(childElement, childName);
+                    }
+                    childIndex++;
                 });
             }
         }
 
-        function renderScene() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (!imagesLoaded) return;
-
-            // 1. حساب مصفوفات الهيكل العظمي
-            computedTransforms['torso'] = {
-                x: skeleton.torso.x,
-                y: skeleton.torso.y,
-                rot: skeleton.torso.rot
-            };
-            
-            if (skeleton.torso.children) {
-                skeleton.torso.children.forEach(child => {
-                    computeBoneTransforms(child, { x: skeleton.torso.x, y: skeleton.torso.y, rot: skeleton.torso.rot });
-                });
-            }
-
-            // 2. رسم الصور المرتبطة بكل عظمة بناءً على مصفوفاتها الحقيقية
-            const drawOrder = ['right_leg', 'left_leg', 'right_arm', 'left_arm', 'torso', 'head'];
-            
-            drawOrder.forEach(bName => {
-                const bone = skeleton[bName];
-                const trans = computedTransforms[bName];
-                if (!trans) return;
-
-                ctx.save();
-                ctx.translate(trans.x, trans.y);
-                ctx.rotate(trans.rot * Math.PI / 180);
-
-                const img = images[bone.imageKey];
-                const imgW = bone.width;
-                const imgH = (img.height / img.width) * imgW;
-
-                ctx.drawImage(img, bone.offsetX - imgW / 2, bone.offsetY, imgW, imgH);
-                ctx.restore();
-            });
-
-            // 3. خيار إظهار الهيكل العظمي (Lines & Joints) تحت المجسم
-            const showSkeleton = document.getElementById('showSkeleton').checked;
-            if (showSkeleton) {
-                ctx.strokeStyle = '#00ffcc';
-                ctx.fillStyle = '#ff5722';
-                ctx.lineWidth = 2;
-
-                for (let bName in skeleton) {
-                    const bone = skeleton[bName];
-                    const t1 = computedTransforms[bName];
-                    if (!t1) continue;
-
-                    // رسم مفصل العظمة الدائري
-                    ctx.beginPath();
-                    ctx.arc(t1.x, t1.y, 4, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.stroke();
-
-                    // رسم خط العظمة إذا كان لها طول (مثل الأطراف)
-                    if (bone.parent && computedTransforms[bone.parent]) {
-                        const tParent = computedTransforms[bone.parent];
-                        ctx.beginPath();
-                        ctx.moveTo(tParent.x, tParent.y);
-                        ctx.lineTo(t1.x, t1.y);
-                        ctx.strokeStyle = '#ffeb3b';
-                        ctx.stroke();
-                    }
-                }
-            }
-        }
-
-        function gameLoop() {
-            updateAnimation();
-            renderScene();
-            requestAnimationFrame(gameLoop);
-        }
-
+        // ربط الأحداث والتحكم
         document.getElementById('animSelect').addEventListener('change', (e) => {
-            activeAnimKey = e.target.value;
-            currentFrame = 0;
-            if (activeAnimKey === "none") {
-                for (let k in skeleton) skeleton[k].rot = 0;
-                initUI();
-            }
+            currentPose = e.target.value;
+            animTime = 0;
         });
 
-        const toggleBtn = document.getElementById('toggleAnimBtn');
+        const toggleBtn = document.getElementById('toggleBtn');
         toggleBtn.addEventListener('click', () => {
             isPlaying = !isPlaying;
-            toggleBtn.textContent = isPlaying ? "إيقاف مؤقت" : "تشغيل الحركة";
+            toggleBtn.textContent = isPlaying ? "إيقاف مؤقت" : "تشغيل";
             toggleBtn.style.background = isPlaying ? "#4CAF50" : "#ff9800";
         });
 
-        initUI();
-    </script>
+        // التشغيل الأولي
+        buildUploadSlots();
+        
+        // بناء الهيكل الأولي مرة واحدة في الـ DOM ثم تحديثه عبر الإطارات لسرعة فائقة
+        function initRigDOM() {
+            rigContainer.innerHTML = '';
+            const torsoDiv = document.createElement('div');
+            torsoDiv.className = 'bone-node';
+            torsoDiv.id = 'bone_torso';
+            torsoDiv.style.zIndex = bonesConfig.torso.zIndex;
+            
+            const torsoImg = document.createElement('img');
+            torsoImg.src = boneImages.torso;
+            torsoImg.className = 'body-part-img';
+            torsoImg.style.width = bonesConfig.torso.width + 'px';
+            torsoImg.style.height = bonesConfig.torso.height + 'px';
+            torsoImg.style.left = `-${bonesConfig.torso.width / 2}px`;
+            torsoImg.style.top = `-${bonesConfig.torso.height / 2}px`;
+            torsoDiv.appendChild(torsoImg);
 
+            // إضافة الأطراف كعناصر ابنة داخل الجذع لتتبع الهيكل العظمي بدقة
+            ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg'].forEach(bName => {
+                const bConfig = bonesConfig[bName];
+                const bDiv = document.createElement('div');
+                bDiv.className = 'bone-node';
+                bDiv.id = `bone_${bName}`;
+                bDiv.style.zIndex = bConfig.zIndex;
+                bDiv.style.transformOrigin = bConfig.origin;
+                
+                const bImg = document.createElement('img');
+                bImg.src = boneImages[bName];
+                bImg.className = 'body-part-img';
+                bImg.style.width = bConfig.width + 'px';
+                bImg.style.height = bConfig.height + 'px';
+                
+                if (bConfig.origin === 'top center') {
+                    bImg.style.left = `-${bConfig.width / 2}px`;
+                    bImg.style.top = '0px';
+                } else if (bConfig.origin === 'bottom center') {
+                    bImg.style.left = `-${bConfig.width / 2}px`;
+                    bImg.style.bottom = '0px';
+                }
+                bDiv.appendChild(bImg);
+                torsoDiv.appendChild(bDiv);
+            });
+
+            rigContainer.appendChild(torsoDiv);
+        }
+
+        // تحديث الصور ديناميكياً عند رفع صور جديدة
+        const originalRenderRig = renderRig;
+        renderRig = function() {
+            initRigDOM();
+        };
+
+        initRigDOM();
+        requestAnimationFrame(animationLoop);
+    </script>
 </body>
 </html>
