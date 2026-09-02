@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Upload Studio - النظام الهيكلي مع مكتبة الوضعيات</title>
+    <title>Twencraft Upload Studio - نظام التحريك والوضعيات المتقدم</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -31,7 +31,7 @@
             border-radius: 8px;
             width: 340px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            max-height: 600px;
+            max-height: 550px;
             overflow-y: auto;
         }
         .stage-container {
@@ -46,11 +46,17 @@
             border-radius: 8px;
             width: 100%;
             display: flex;
+            flex-direction: column;
             gap: 10px;
-            align-items: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        select, input[type="range"] {
+        .control-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+        select, input[type="range"], button {
             width: 100%;
             background: #333;
             color: #fff;
@@ -58,7 +64,16 @@
             padding: 6px;
             border-radius: 4px;
         }
-        select { cursor: pointer; }
+        select, button { cursor: pointer; }
+        button {
+            background: #4CAF50;
+            border: none;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover { background: #45a049; }
+        button.stop-btn { background: #e53935; }
+        button.stop-btn:hover { background: #d32f2f; }
         .stage {
             width: 400px;
             height: 500px;
@@ -88,8 +103,8 @@
             pointer-events: none;
         }
         .bone-control {
-            margin-bottom: 12px;
-            padding-bottom: 8px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
             border-bottom: 1px solid #444;
             font-size: 13px;
         }
@@ -98,33 +113,33 @@
             justify-content: space-between;
             color: #4CAF50;
             font-weight: bold;
-            margin-bottom: 4px;
-        }
-        .pose-section {
-            margin-bottom: 15px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #444;
+            margin-bottom: 6px;
         }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <!-- لوحة التحكم الهيكلي ومكتبة الوضعيات -->
+        <!-- لوحة التحكم الهيكلي للمفاصل والوضعيات -->
         <div class="sidebar">
-            <div class="pose-section">
-                <div style="font-weight: bold; margin-bottom: 8px; color: #ffeb3b; font-size: 14px;">مكتبة الوضعيات الجاهزة</div>
-                <select id="poseSelect"></select>
-            </div>
-            
-            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b; font-size: 14px;">التحكم اليدوي بالمفاصل الستة</div>
+            <div style="font-weight: bold; margin-bottom: 12px; color: #ffeb3b; font-size: 15px;">نظام الهيكل العظمي (6 مفاصل والوضعيات)</div>
             <div id="bonesControls"></div>
         </div>
 
         <div class="stage-container">
             <div class="library-bar">
-                <label for="characterSelect" style="white-space: nowrap;">المكتبة:</label>
-                <select id="characterSelect"></select>
+                <div class="control-row">
+                    <label for="characterSelect" style="white-space: nowrap; width: 60px;">المكتبة:</label>
+                    <select id="characterSelect"></select>
+                </div>
+                <div class="control-row">
+                    <label for="animationSelect" style="white-space: nowrap; width: 60px;">الأنيميشن:</label>
+                    <select id="animationSelect"></select>
+                </div>
+                <div class="control-row">
+                    <button id="playBtn">تشغيل الأنيميشن السلس</button>
+                    <button id="stopBtn" class="stop-btn">إيقاف</button>
+                </div>
             </div>
 
             <div class="stage">
@@ -134,7 +149,7 @@
     </div>
 
     <script>
-        // هيكل بيانات الشخصية (مع طبقات Z-Index الدقيقة ومراكز الدوران)
+        // هيكل بيانات الشخصية (مع ضبط طبقات Z-Index ومركز الدوران عند الكتف والحوض)
         const charactersData = [
             {
                 id: "hero_mascot",
@@ -146,7 +161,7 @@
                         width: 74,
                         x: 0,
                         y: -32,
-                        zIndex: 3,
+                        zIndex: 3, // الطبقة الوسطى (مع الصدر والذراعان)
                         origin: "center center",
                         minRot: -20, maxRot: 20,
                         children: ["head", "right_arm", "left_arm", "right_leg", "left_leg"]
@@ -156,7 +171,7 @@
                         width: 88,
                         x: 0,
                         y: -55,
-                        zIndex: 4,
+                        zIndex: 4, // الطبقة الأولى في الأعلى تماماً
                         origin: "bottom center",
                         minRot: -45, maxRot: 45,
                         children: []
@@ -166,7 +181,7 @@
                         width: 32,
                         x: 25,
                         y: -38,
-                        zIndex: 3,
+                        zIndex: 3, // في نفس طبقة الصدر وتحت الرأس، ومركز الدوران هو مفصل الكتف
                         origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
@@ -176,7 +191,7 @@
                         width: 32,
                         x: -25,
                         y: -38,
-                        zIndex: 3,
+                        zIndex: 3, // في نفس طبقة الصدر وتحت الرأس، ومركز الدوران هو مفصل الكتف
                         origin: "top center",
                         minRot: -90, maxRot: 90,
                         children: []
@@ -186,7 +201,7 @@
                         width: 32,
                         x: 18,
                         y: 40,
-                        zIndex: 1,
+                        zIndex: 1, // تحتهم كلهم في الأسفل
                         origin: "top center",
                         minRot: -45, maxRot: 45,
                         children: []
@@ -196,7 +211,7 @@
                         width: 25,
                         x: -15,
                         y: 40,
-                        zIndex: 1,
+                        zIndex: 1, // تحتهم كلهم في الأسفل
                         origin: "top center",
                         minRot: -45, maxRot: 45,
                         children: []
@@ -205,15 +220,59 @@
             }
         ];
 
-        // مكتبة الوضعيات الجاهزة والمنظمة
-        const posesLibrary = [
-            { name: "الوضع الافتراضي (Default Stand)", rotations: { torso: 0, head: 0, right_arm: 0, left_arm: 0, right_leg: 0, left_leg: 0 } },
-            { name: "التلويح باليد (Waving Hello)", rotations: { torso: 5, head: 5, right_arm: -75, left_arm: 15, right_leg: 0, left_leg: 0 } },
-            { name: "وضع القتال والهجوم (Combat Stance)", rotations: { torso: -10, head: 10, right_arm: -45, left_arm: -45, right_leg: 20, left_leg: -20 } },
-            { name: "الوقفة العسكرية المستقيمة (Attention)", rotations: { torso: 0, head: 0, right_arm: 10, left_arm: -10, right_leg: 0, left_leg: 0 } },
-            { name: "وضع الاسترخاء والانحناء (Relaxed Bow)", rotations: { torso: 15, head: -15, right_arm: 25, left_arm: -25, right_leg: -10, left_leg: 10 } },
-            { name: "وضع القفز والحماس (Action Jump)", rotations: { torso: -5, head: -10, right_arm: -60, left_arm: -60, right_leg: 30, left_leg: 30 } }
-        ];
+        // مكتبة الأنيميشن والوضعيات السلسة متعددة الفريمات
+        const animationsLibrary = {
+            none: {
+                name: "وضعيات يدوية (بدون أنيميشن)",
+                frames: []
+            },
+            idle: {
+                name: "التنفس والوقوف الهادئ (Idle)",
+                frames: [
+                    { head: 0, torso: 0, right_arm: 2, left_arm: -2, right_leg: 0, left_leg: 0 },
+                    { head: 2, torso: 1, right_arm: 4, left_arm: -4, right_leg: 1, left_leg: -1 },
+                    { head: 4, torso: 2, right_arm: 6, left_arm: -6, right_leg: 2, left_leg: -2 },
+                    { head: 2, torso: 1, right_arm: 4, left_arm: -4, right_leg: 1, left_leg: -1 },
+                    { head: 0, torso: 0, right_arm: 2, left_arm: -2, right_leg: 0, left_leg: 0 },
+                    { head: -2, torso: -1, right_arm: 0, left_arm: 0, right_leg: -1, left_leg: 1 },
+                    { head: -4, torso: -2, right_arm: -2, left_arm: 2, right_leg: -2, left_leg: 2 },
+                    { head: -2, torso: -1, right_arm: 0, left_arm: 0, right_leg: -1, left_leg: 1 }
+                ]
+            },
+            walking: {
+                name: "المشي المتناسق السلس (Walking)",
+                frames: [
+                    { head: 2, torso: 5, right_arm: 35, left_arm: -35, right_leg: -25, left_leg: 25 },
+                    { head: 0, torso: 2, right_arm: 15, left_arm: -15, right_leg: -10, left_leg: 10 },
+                    { head: -2, torso: -2, right_arm: -15, left_arm: 15, right_leg: 10, left_leg: -10 },
+                    { head: -3, torso: -5, right_arm: -35, left_arm: 35, right_leg: 25, left_leg: -25 },
+                    { head: -2, torso: -2, right_arm: -15, left_arm: 15, right_leg: 10, left_leg: -10 },
+                    { head: 0, torso: 2, right_arm: 15, left_arm: -15, right_leg: -10, left_leg: 10 }
+                ]
+            },
+            wave: {
+                name: "التلويح والتحية (Waving)",
+                frames: [
+                    { head: -5, torso: 3, right_arm: -75, left_arm: 0, right_leg: 0, left_leg: 0 },
+                    { head: -5, torso: 3, right_arm: -40, left_arm: 0, right_leg: 0, left_leg: 0 },
+                    { head: -5, torso: 3, right_arm: -85, left_arm: 0, right_leg: 0, left_leg: 0 },
+                    { head: -5, torso: 3, right_arm: -40, left_arm: 0, right_leg: 0, left_leg: 0 },
+                    { head: -5, torso: 3, right_arm: -75, left_arm: 0, right_leg: 0, left_leg: 0 },
+                    { head: 0, torso: 0, right_arm: 0, left_arm: 0, right_leg: 0, left_leg: 0 }
+                ]
+            },
+            running: {
+                name: "الركض السريع والحماسي (Running)",
+                frames: [
+                    { head: -10, torso: 15, right_arm: 60, left_arm: -60, right_leg: -40, left_leg: 40 },
+                    { head: -5, torso: 5, right_arm: 20, left_arm: -20, right_leg: -15, left_leg: 15 },
+                    { head: 5, torso: -10, right_arm: -40, left_arm: 40, right_leg: 20, left_leg: -20 },
+                    { head: 10, torso: -15, right_arm: -65, left_arm: 65, right_leg: 40, left_leg: -40 },
+                    { head: 5, torso: -10, right_arm: -40, left_arm: 40, right_leg: 20, left_leg: -20 },
+                    { head: -5, torso: 5, right_arm: 20, left_arm: -20, right_leg: -15, left_leg: 15 }
+                ]
+            }
+        };
 
         let activeCharacterIndex = 0;
         let boneRotations = {
@@ -225,10 +284,16 @@
             torso: 0
         };
 
+        let currentAnimKey = "none";
+        let animInterval = null;
+        let frameIndex = 0;
+
         const rigContainer = document.getElementById('characterRig');
         const characterSelect = document.getElementById('characterSelect');
-        const poseSelect = document.getElementById('poseSelect');
+        const animationSelect = document.getElementById('animationSelect');
         const bonesControls = document.getElementById('bonesControls');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
 
         function initLibrary() {
             characterSelect.innerHTML = '';
@@ -239,12 +304,12 @@
                 characterSelect.appendChild(opt);
             });
 
-            poseSelect.innerHTML = '';
-            posesLibrary.forEach((pose, index) => {
+            animationSelect.innerHTML = '';
+            Object.keys(animationsLibrary).forEach(key => {
                 const opt = document.createElement('option');
-                opt.value = index;
-                opt.textContent = pose.name;
-                poseSelect.appendChild(opt);
+                opt.value = key;
+                opt.textContent = animationsLibrary[key].name;
+                animationSelect.appendChild(opt);
             });
         }
 
@@ -302,6 +367,17 @@
             rigContainer.appendChild(createBoneElement(char.rootBone, char.bones));
         }
 
+        function updateSlidersUI() {
+            for (const [partName, val] of Object.entries(boneRotations)) {
+                const slider = document.querySelector(`input[data-part="${partName}"]`);
+                const valSpan = document.getElementById(`val_${partName}`);
+                if (slider && valSpan) {
+                    slider.value = val;
+                    valSpan.textContent = val + '°';
+                }
+            }
+        }
+
         function buildBoneControls() {
             bonesControls.innerHTML = '';
             const char = charactersData[activeCharacterIndex];
@@ -319,6 +395,8 @@
 
             bonesControls.querySelectorAll('input[type="range"]').forEach(slider => {
                 slider.addEventListener('input', (e) => {
+                    stopAnimation(); // إيقاف الأنيميشن عند التدخل اليدوي
+                    animationSelect.value = "none";
                     const part = e.target.dataset.part;
                     const val = parseInt(e.target.value);
                     boneRotations[part] = val;
@@ -328,24 +406,58 @@
             });
         }
 
-        // تطبيق الوضعية المحددة وتحديث قيم الـ Sliders تلقائياً
-        poseSelect.addEventListener('change', (e) => {
-            const poseIndex = parseInt(e.target.value);
-            const selectedPose = posesLibrary[poseIndex];
-            
-            if (selectedPose) {
-                boneRotations = { ...selectedPose.rotations };
-                buildBoneControls();
+        function startAnimation() {
+            stopAnimation();
+            currentAnimKey = animationSelect.value;
+            if (currentAnimKey === "none") return;
+
+            const anim = animationsLibrary[currentAnimKey];
+            if (!anim || !anim.frames || anim.frames.length === 0) return;
+
+            frameIndex = 0;
+            animInterval = setInterval(() => {
+                const frame = anim.frames[frameIndex];
+                for (const [part, rot] of Object.entries(frame)) {
+                    boneRotations[part] = rot;
+                }
+                updateSlidersUI();
                 renderCharacter();
+
+                frameIndex = (frameIndex + 1) % anim.frames.length;
+            }, 100); // سرعة السلاسة بين الفريمات (100ms)
+        }
+
+        function stopAnimation() {
+            if (animInterval) {
+                clearInterval(animInterval);
+                animInterval = null;
             }
-        });
+        }
 
         characterSelect.addEventListener('change', (e) => {
             activeCharacterIndex = parseInt(e.target.value);
             Object.keys(boneRotations).forEach(k => boneRotations[k] = 0);
-            poseSelect.value = 0;
+            stopAnimation();
+            animationSelect.value = "none";
             buildBoneControls();
             renderCharacter();
+        });
+
+        animationSelect.addEventListener('change', () => {
+            if (animationSelect.value === "none") {
+                stopAnimation();
+            } else {
+                startAnimation();
+            }
+        });
+
+        playBtn.addEventListener('click', () => {
+            startAnimation();
+        });
+
+        stopBtn.addEventListener('click', () => {
+            stopAnimation();
+            animationSelect.value = "none";
         });
 
         initLibrary();
