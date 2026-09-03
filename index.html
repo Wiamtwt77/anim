@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Custom Studio - الهيكل العظمي بالقيم المخصصة</title>
+    <title>Twencraft Master Rigging Studio - النسخة النهائية</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -29,9 +29,9 @@
             background: #1f1f1f;
             padding: 15px;
             border-radius: 10px;
-            width: 400px;
+            width: 410px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-            max-height: 680px;
+            max-height: 700px;
             overflow-y: auto;
             border: 1px solid #333;
         }
@@ -78,8 +78,8 @@
         }
         button:hover { background: #45a049; }
         .stage {
-            width: 440px;
-            height: 540px;
+            width: 460px;
+            height: 560px;
             background: #1a1a1a;
             border: 2px dashed #444;
             border-radius: 12px;
@@ -150,9 +150,9 @@
 
     <div class="app-container">
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b; font-size: 15px;">لوحة تحكم وتعديل العظام بالقيم المسجلة</div>
+            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b; font-size: 15px;">إستوديو الهيكل العظمي والربط الهندسي</div>
             <div style="font-size: 12px; color: #ccc; margin-bottom: 15px; line-height: 1.5;">
-                تم تسجيل القيم التي أرسلتها وضبطها كإعدادات افتراضية للمحرك. يمكنك التعديل عليها في أي وقت.
+                تم تسجيل القيم المعتمدة بدقة. يمكنك رفع الصور وتعديل الأبعاد والإحداثيات فورياً.
             </div>
             <div id="uploadSlotsContainer"></div>
         </div>
@@ -160,11 +160,12 @@
         <div class="stage-container">
             <div class="top-bar">
                 <div class="control-group">
-                    <label for="animSelect">مكتبة التحركات العضوية:</label>
+                    <label for="animSelect">مكتبة التحركات والوضعيات الجاهزة:</label>
                     <select id="animSelect">
                         <option value="idle">تنفس واستعداد هادئ (Organic Idle)</option>
                         <option value="walk">مشية احترافية مرنة (Fluid Walk)</option>
                         <option value="dance">رقصة حماسية متأرجحة (Dynamic Dance)</option>
+                        <option value="combat">وضعية القتال والاستعداد (Combat Stance)</option>
                     </select>
                 </div>
                 <div style="width: 110px;">
@@ -180,54 +181,54 @@
     </div>
 
     <script>
-        // إعدادات العظام مسجلة بالقيم الفعلية المستخرجة من لقطات الشاشة
+        // إعدادات العظام مدعومة بالقيم المحددة بدقة من لقطات الشاشة
         const bonesConfig = {
             torso: {
                 name: "الجذع الأساسي (Torso)",
-                width: 145, height: 205, x: 12, y: -19,
+                width: 205, height: 145, x: 12, y: -19,
                 origin: "center center", zIndex: 2,
-                minW: 20, maxW: 300, minH: 20, maxH: 300, minX: -150, maxX: 150, minY: -200, maxY: 200,
-                defaultImg: generatePlaceholderDataURL('torso.png', '#4CAF50', 145, 205),
+                minW: 50, maxW: 350, minH: 50, maxH: 350, minX: -150, maxX: 150, minY: -150, maxY: 150,
+                defaultImg: generatePlaceholderDataURL('Torso', '#4CAF50', 205, 145),
                 children: ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg']
             },
             head: {
                 name: "الرأس (Head)",
-                width: 124, height: 113, x: 3, y: -48,
+                width: 113, height: 124, x: 3, y: -48,
                 origin: "bottom center", zIndex: 3,
-                minW: 20, maxW: 250, minH: 20, maxH: 250, minX: -150, maxX: 150, minY: -200, maxY: 50,
-                defaultImg: generatePlaceholderDataURL('head.png', '#ffccbc', 124, 113),
+                minW: 40, maxW: 250, minH: 40, maxH: 250, minX: -100, maxX: 100, minY: -150, maxY: 50,
+                defaultImg: generatePlaceholderDataURL('Head', '#ffccbc', 113, 124),
                 children: []
             },
             r_arm: {
                 name: "الذراع اليمنى (Right Arm)",
-                width: 85, height: 165, x: 21, y: -72,
+                width: 165, height: 85, x: 21, y: -72,
                 origin: "top center", zIndex: 2,
-                minW: 10, maxW: 200, minH: 20, maxH: 300, minX: -100, maxX: 150, minY: -150, maxY: 150,
-                defaultImg: generatePlaceholderDataURL('arm_right.png', '#66bb6a', 85, 165),
+                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -100, maxX: 150, minY: -150, maxY: 100,
+                defaultImg: generatePlaceholderDataURL('R Arm', '#66bb6a', 165, 85),
                 children: []
             },
             l_arm: {
                 name: "الذراع اليسرى (Left Arm)",
-                width: 85, height: 165, x: -21, y: -72,
+                width: 165, height: 85, x: -21, y: -72,
                 origin: "top center", zIndex: 2,
-                minW: 10, maxW: 200, minH: 20, maxH: 300, minX: -150, maxX: 100, minY: -150, maxY: 150,
-                defaultImg: generatePlaceholderDataURL('arm_left.png', '#66bb6a', 85, 165),
+                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -150, maxX: 100, minY: -150, maxY: 100,
+                defaultImg: generatePlaceholderDataURL('L Arm', '#66bb6a', 165, 85),
                 children: []
             },
             r_leg: {
                 name: "الرجل اليمنى (Right Leg)",
-                width: 85, height: 166, x: 0, y: 32,
+                width: 166, height: 85, x: 21, y: 32,
                 origin: "top center", zIndex: 1,
-                minW: 10, maxW: 200, minH: 20, maxH: 300, minX: -100, maxX: 150, minY: -50, maxY: 200,
-                defaultImg: generatePlaceholderDataURL('leg_right.png', '#388e3c', 85, 166),
+                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -100, maxX: 150, minY: -50, maxY: 150,
+                defaultImg: generatePlaceholderDataURL('R Leg', '#388e3c', 166, 85),
                 children: []
             },
             l_leg: {
                 name: "الرجل اليسرى (Left Leg)",
-                width: 85, height: 165, x: 32, y: -8,
+                width: 165, height: 85, x: -8, y: 32,
                 origin: "top center", zIndex: 1,
-                minW: 10, maxW: 200, minH: 20, maxH: 300, minX: -100, maxX: 150, minY: -50, maxY: 200,
-                defaultImg: generatePlaceholderDataURL('leg_left.png', '#388e3c', 85, 165),
+                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -150, maxX: 100, minY: -50, maxY: 150,
+                defaultImg: generatePlaceholderDataURL('L Leg', '#388e3c', 165, 85),
                 children: []
             }
         };
@@ -323,6 +324,7 @@
             });
         }
 
+        // مكتبة الحركات والوضعيات الجاهزة
         const poses = {
             idle: (t) => {
                 boneTargetAngles.torso = Math.sin(t * 0.04) * 0.03;
@@ -347,6 +349,14 @@
                 boneTargetAngles.l_arm = 1.5 + Math.cos(t * 0.15) * 0.8;
                 boneTargetAngles.r_leg = Math.sin(t * 0.15) * 0.4;
                 boneTargetAngles.l_leg = -Math.sin(t * 0.15) * 0.4;
+            },
+            combat: (t) => {
+                boneTargetAngles.torso = 0.1 + Math.sin(t * 0.06) * 0.02;
+                boneTargetAngles.head = -0.1;
+                boneTargetAngles.r_arm = -0.8 + Math.sin(t * 0.06) * 0.05;
+                boneTargetAngles.l_arm = -1.2;
+                boneTargetAngles.r_leg = 0.2;
+                boneTargetAngles.l_leg = -0.2;
             }
         };
 
@@ -384,6 +394,7 @@
             torsoImg.style.top = `-${torsoConfig.height / 2}px`;
             torsoDiv.appendChild(torsoImg);
 
+            // ربط الأطراف هرمياً لضمان عدم انفصالها أبداً
             ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg'].forEach(bName => {
                 const bConfig = bonesConfig[bName];
                 const bDiv = document.createElement('div');
