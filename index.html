@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Master Rigging Studio - النسخة النهائية</title>
+    <title>Twencraft Character Library Studio</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -150,10 +150,13 @@
 
     <div class="app-container">
         <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b; font-size: 15px;">إستوديو الهيكل العظمي والربط الهندسي</div>
-            <div style="font-size: 12px; color: #ccc; margin-bottom: 15px; line-height: 1.5;">
-                تم تسجيل القيم المعتمدة بدقة. يمكنك رفع الصور وتعديل الأبعاد والإحداثيات فورياً.
+            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b; font-size: 15px;">مكتبة الشخصيات والاستوديو</div>
+            
+            <div class="control-group" style="margin-bottom: 15px;">
+                <label for="characterSelect" style="color: #ffeb3b; margin-bottom: 4px;">اختر الشخصية من المكتبة:</label>
+                <select id="characterSelect"></select>
             </div>
+
             <div id="uploadSlotsContainer"></div>
         </div>
 
@@ -181,117 +184,99 @@
     </div>
 
     <script>
-        // إعدادات العظام مدعومة بالقيم المحددة بدقة من لقطات الشاشة
-        const bonesConfig = {
-            torso: {
-                name: "الجذع الأساسي (Torso)",
-                width: 205, height: 145, x: 12, y: -19,
-                origin: "center center", zIndex: 2,
-                minW: 50, maxW: 350, minH: 50, maxH: 350, minX: -150, maxX: 150, minY: -150, maxY: 150,
-                defaultImg: generatePlaceholderDataURL('Torso', '#4CAF50', 205, 145),
-                children: ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg']
-            },
-            head: {
-                name: "الرأس (Head)",
-                width: 113, height: 124, x: 3, y: -48,
-                origin: "bottom center", zIndex: 3,
-                minW: 40, maxW: 250, minH: 40, maxH: 250, minX: -100, maxX: 100, minY: -150, maxY: 50,
-                defaultImg: generatePlaceholderDataURL('Head', '#ffccbc', 113, 124),
-                children: []
-            },
-            r_arm: {
-                name: "الذراع اليمنى (Right Arm)",
-                width: 165, height: 85, x: 21, y: -72,
-                origin: "top center", zIndex: 2,
-                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -100, maxX: 150, minY: -150, maxY: 100,
-                defaultImg: generatePlaceholderDataURL('R Arm', '#66bb6a', 165, 85),
-                children: []
-            },
-            l_arm: {
-                name: "الذراع اليسرى (Left Arm)",
-                width: 165, height: 85, x: -21, y: -72,
-                origin: "top center", zIndex: 2,
-                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -150, maxX: 100, minY: -150, maxY: 100,
-                defaultImg: generatePlaceholderDataURL('L Arm', '#66bb6a', 165, 85),
-                children: []
-            },
-            r_leg: {
-                name: "الرجل اليمنى (Right Leg)",
-                width: 166, height: 85, x: 21, y: 32,
-                origin: "top center", zIndex: 1,
-                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -100, maxX: 150, minY: -50, maxY: 150,
-                defaultImg: generatePlaceholderDataURL('R Leg', '#388e3c', 166, 85),
-                children: []
-            },
-            l_leg: {
-                name: "الرجل اليسرى (Left Leg)",
-                width: 165, height: 85, x: -8, y: 32,
-                origin: "top center", zIndex: 1,
-                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -150, maxX: 100, minY: -50, maxY: 150,
-                defaultImg: generatePlaceholderDataURL('L Leg', '#388e3c', 165, 85),
-                children: []
-            }
-        };
-
-        let boneImages = {};
-        for (let key in bonesConfig) {
-            boneImages[key] = bonesConfig[key].defaultImg;
-        }
-
-        let boneAngles = { torso: 0, head: 0, r_arm: 0, l_arm: 0, r_leg: 0, l_leg: 0 };
-        let boneTargetAngles = { torso: 0, head: 0, r_arm: 0, l_arm: 0, r_leg: 0, l_leg: 0 };
+        let characterLibrary = [];
+        let activeCharacter = null;
+        let boneAngles = {};
+        let boneTargetAngles = {};
         let boneLags = { torso: 0.12, head: 0.15, r_arm: 0.09, l_arm: 0.09, r_leg: 0.1, l_leg: 0.1 };
 
         let animTime = 0;
         let isPlaying = true;
         let currentPose = 'idle';
 
-        function generatePlaceholderDataURL(text, color, w, h) {
-            const canvas = document.createElement('canvas');
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = color;
-            ctx.roundRect ? ctx.roundRect(0, 0, w, h, 8) : ctx.fillRect(0, 0, w, h);
-            ctx.fill();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 2;
-            ctx.stroke();
+        // تحميل ملف list.json الذي يحتوي على مكتبة الشخصيات
+        async function loadCharacterLibrary() {
+            try {
+                const response = await fetch('list.json');
+                characterLibrary = await response.json();
+            } catch (e) {
+                // بيانات افتراضية احتياطية في حال لم يتم العثور على الملف محلياً
+                characterLibrary = [
+                    {
+                        id: "hero_mascot",
+                        name: "الشخصية الأساسية (الافتراضية)",
+                        parts: {
+                            torso: { name: "الجذع الأساسي", src: "torso.png", width: 205, height: 145, x: 12, y: -19, zIndex: 2 },
+                            head: { name: "الرأس", src: "head.png", width: 113, height: 124, x: 3, y: -48, zIndex: 3 },
+                            r_arm: { name: "الذراع اليمنى", src: "right_arm.png", width: 165, height: 85, x: 21, y: -72, zIndex: 2 },
+                            l_arm: { name: "الذراع اليسرى", src: "left_arm.png", width: 165, height: 85, x: -21, y: -72, zIndex: 2 },
+                            r_leg: { name: "الرجل اليمنى", src: "right_leg.png", width: 166, height: 85, x: 21, y: 32, zIndex: 1 },
+                            l_leg: { name: "الرجل اليسرى", src: "left_leg.png", width: 165, height: 85, x: -8, y: 32, zIndex: 1 }
+                        }
+                    }
+                ];
+            }
+            initCharacterSelector();
+        }
+
+        function initCharacterSelector() {
+            const select = document.getElementById('characterSelect');
+            select.innerHTML = '';
+            characterLibrary.forEach((char, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = char.name;
+                select.appendChild(opt);
+            });
+
+            select.addEventListener('change', (e) => {
+                loadCharacter(e.target.value);
+            });
+
+            loadCharacter(0);
+        }
+
+        function loadCharacter(index) {
+            // نسخ عميق لبيانات الشخصية حتى لا تتأثر القيم الأصلية مباشرة بالتعديل الحر
+            activeCharacter = JSON.parse(JSON.stringify(characterLibrary[index]));
             
-            ctx.fillStyle = '#111';
-            ctx.font = 'bold 11px Tahoma';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, w / 2, h / 2);
-            return canvas.toDataURL();
+            boneAngles = {};
+            boneTargetAngles = {};
+            for (let key in activeCharacter.parts) {
+                boneAngles[key] = 0;
+                boneTargetAngles[key] = 0;
+            }
+
+            buildUploadSlots();
+            initRigDOM();
         }
 
         function buildUploadSlots() {
             const container = document.getElementById('uploadSlotsContainer');
             container.innerHTML = '';
 
-            for (let [key, config] of Object.entries(bonesConfig)) {
+            for (let [key, part] of Object.entries(activeCharacter.parts)) {
                 const slot = document.createElement('div');
                 slot.className = 'upload-slot';
                 slot.innerHTML = `
-                    <label>${config.name}</label>
+                    <label>${part.name}</label>
                     <input type="file" accept="image/png, image/jpeg" data-bone="${key}" style="margin-bottom: 8px;">
                     <div class="sliders-grid">
                         <div class="slider-field">
-                            <span>العرض: <b id="val_w_${key}">${config.width}px</b></span>
-                            <input type="range" min="${config.minW}" max="${config.maxW}" value="${config.width}" data-bone="${key}" data-prop="width">
+                            <span>العرض: <b id="val_w_${key}">${part.width}px</b></span>
+                            <input type="range" min="30" max="350" value="${part.width}" data-bone="${key}" data-prop="width">
                         </div>
                         <div class="slider-field">
-                            <span>الارتفاع: <b id="val_h_${key}">${config.height}px</b></span>
-                            <input type="range" min="${config.minH}" max="${config.maxH}" value="${config.height}" data-bone="${key}" data-prop="height">
+                            <span>الارتفاع: <b id="val_h_${key}">${part.height}px</b></span>
+                            <input type="range" min="30" max="350" value="${part.height}" data-bone="${key}" data-prop="height">
                         </div>
                         <div class="slider-field">
-                            <span>موقع X: <b id="val_x_${key}">${config.x}</b></span>
-                            <input type="range" min="${config.minX}" max="${config.maxX}" value="${config.x}" data-bone="${key}" data-prop="x">
+                            <span>موقع X: <b id="val_x_${key}">${part.x}</b></span>
+                            <input type="range" min="-150" max="150" value="${part.x}" data-bone="${key}" data-prop="x">
                         </div>
                         <div class="slider-field">
-                            <span>موقع Y: <b id="val_y_${key}">${config.y}</b></span>
-                            <input type="range" min="${config.minY}" max="${config.maxY}" value="${config.y}" data-bone="${key}" data-prop="y">
+                            <span>موقع Y: <b id="val_y_${key}">${part.y}</b></span>
+                            <input type="range" min="-150" max="150" value="${part.y}" data-bone="${key}" data-prop="y">
                         </div>
                     </div>
                 `;
@@ -303,8 +288,7 @@
                     const boneKey = e.target.dataset.bone;
                     const file = e.target.files[0];
                     if (file) {
-                        const url = URL.createObjectURL(file);
-                        boneImages[boneKey] = url;
+                        activeCharacter.parts[boneKey].src = URL.createObjectURL(file);
                         initRigDOM();
                     }
                 });
@@ -316,7 +300,7 @@
                     const prop = e.target.dataset.prop;
                     const val = parseInt(e.target.value);
                     
-                    bonesConfig[boneKey][prop] = val;
+                    activeCharacter.parts[boneKey][prop] = val;
                     document.getElementById(`val_${prop === 'width' ? 'w' : prop === 'height' ? 'h' : prop}_${boneKey}`).textContent = val + (prop === 'width' || prop === 'height' ? 'px' : '');
                     
                     initRigDOM();
@@ -324,39 +308,38 @@
             });
         }
 
-        // مكتبة الحركات والوضعيات الجاهزة
         const poses = {
             idle: (t) => {
-                boneTargetAngles.torso = Math.sin(t * 0.04) * 0.03;
-                boneTargetAngles.head = Math.sin(t * 0.04) * 0.08;
-                boneTargetAngles.r_arm = 0.1 + Math.sin(t * 0.04) * 0.1;
-                boneTargetAngles.l_arm = -0.1 - Math.sin(t * 0.04) * 0.1;
-                boneTargetAngles.r_leg = 0.05;
-                boneTargetAngles.l_leg = -0.05;
+                if(boneTargetAngles.torso !== undefined) boneTargetAngles.torso = Math.sin(t * 0.04) * 0.03;
+                if(boneTargetAngles.head !== undefined) boneTargetAngles.head = Math.sin(t * 0.04) * 0.08;
+                if(boneTargetAngles.r_arm !== undefined) boneTargetAngles.r_arm = 0.1 + Math.sin(t * 0.04) * 0.1;
+                if(boneTargetAngles.l_arm !== undefined) boneTargetAngles.l_arm = -0.1 - Math.sin(t * 0.04) * 0.1;
+                if(boneTargetAngles.r_leg !== undefined) boneTargetAngles.r_leg = 0.05;
+                if(boneTargetAngles.l_leg !== undefined) boneTargetAngles.l_leg = -0.05;
             },
             walk: (t) => {
-                boneTargetAngles.torso = Math.sin(t * 0.08) * 0.05;
-                boneTargetAngles.head = Math.sin(t * 0.08) * 0.06;
-                boneTargetAngles.r_arm = Math.sin(t * 0.08) * 0.6;
-                boneTargetAngles.l_arm = -Math.sin(t * 0.08) * 0.6;
-                boneTargetAngles.r_leg = -Math.sin(t * 0.08) * 0.5;
-                boneTargetAngles.l_leg = Math.sin(t * 0.08) * 0.5;
+                if(boneTargetAngles.torso !== undefined) boneTargetAngles.torso = Math.sin(t * 0.08) * 0.05;
+                if(boneTargetAngles.head !== undefined) boneTargetAngles.head = Math.sin(t * 0.08) * 0.06;
+                if(boneTargetAngles.r_arm !== undefined) boneTargetAngles.r_arm = Math.sin(t * 0.08) * 0.6;
+                if(boneTargetAngles.l_arm !== undefined) boneTargetAngles.l_arm = -Math.sin(t * 0.08) * 0.6;
+                if(boneTargetAngles.r_leg !== undefined) boneTargetAngles.r_leg = -Math.sin(t * 0.08) * 0.5;
+                if(boneTargetAngles.l_leg !== undefined) boneTargetAngles.l_leg = Math.sin(t * 0.08) * 0.5;
             },
             dance: (t) => {
-                boneTargetAngles.torso = Math.sin(t * 0.15) * 0.15;
-                boneTargetAngles.head = Math.cos(t * 0.15) * 0.2;
-                boneTargetAngles.r_arm = -1.5 + Math.sin(t * 0.15) * 0.8;
-                boneTargetAngles.l_arm = 1.5 + Math.cos(t * 0.15) * 0.8;
-                boneTargetAngles.r_leg = Math.sin(t * 0.15) * 0.4;
-                boneTargetAngles.l_leg = -Math.sin(t * 0.15) * 0.4;
+                if(boneTargetAngles.torso !== undefined) boneTargetAngles.torso = Math.sin(t * 0.15) * 0.15;
+                if(boneTargetAngles.head !== undefined) boneTargetAngles.head = Math.cos(t * 0.15) * 0.2;
+                if(boneTargetAngles.r_arm !== undefined) boneTargetAngles.r_arm = -1.5 + Math.sin(t * 0.15) * 0.8;
+                if(boneTargetAngles.l_arm !== undefined) boneTargetAngles.l_arm = 1.5 + Math.cos(t * 0.15) * 0.8;
+                if(boneTargetAngles.r_leg !== undefined) boneTargetAngles.r_leg = Math.sin(t * 0.15) * 0.4;
+                if(boneTargetAngles.l_leg !== undefined) boneTargetAngles.l_leg = -Math.sin(t * 0.15) * 0.4;
             },
             combat: (t) => {
-                boneTargetAngles.torso = 0.1 + Math.sin(t * 0.06) * 0.02;
-                boneTargetAngles.head = -0.1;
-                boneTargetAngles.r_arm = -0.8 + Math.sin(t * 0.06) * 0.05;
-                boneTargetAngles.l_arm = -1.2;
-                boneTargetAngles.r_leg = 0.2;
-                boneTargetAngles.l_leg = -0.2;
+                if(boneTargetAngles.torso !== undefined) boneTargetAngles.torso = 0.1;
+                if(boneTargetAngles.head !== undefined) boneTargetAngles.head = -0.1;
+                if(boneTargetAngles.r_arm !== undefined) boneTargetAngles.r_arm = -0.8;
+                if(boneTargetAngles.l_arm !== undefined) boneTargetAngles.l_arm = -1.2;
+                if(boneTargetAngles.r_leg !== undefined) boneTargetAngles.r_leg = 0.2;
+                if(boneTargetAngles.l_leg !== undefined) boneTargetAngles.l_leg = -0.2;
             }
         };
 
@@ -369,55 +352,62 @@
             }
 
             for (let key in boneAngles) {
-                let diff = boneTargetAngles[key] - boneAngles[key];
-                boneAngles[key] += diff * (boneLags[key] || 0.1);
+                if (boneTargetAngles[key] !== undefined) {
+                    let diff = boneTargetAngles[key] - boneAngles[key];
+                    boneAngles[key] += diff * (boneLags[key] || 0.1);
+                }
             }
         }
 
         const rigContainer = document.getElementById('characterRig');
 
         function initRigDOM() {
+            if (!activeCharacter) return;
             rigContainer.innerHTML = '';
-            const torsoConfig = bonesConfig.torso;
             
+            const torsoPart = activeCharacter.parts.torso;
+            if (!torsoPart) return;
+
             const torsoDiv = document.createElement('div');
             torsoDiv.className = 'bone-node';
             torsoDiv.id = 'bone_torso';
-            torsoDiv.style.zIndex = torsoConfig.zIndex;
+            torsoDiv.style.zIndex = torsoPart.zIndex || 2;
             
             const torsoImg = document.createElement('img');
-            torsoImg.src = boneImages.torso;
+            torsoImg.src = torsoPart.src;
             torsoImg.className = 'body-part-img';
-            torsoImg.style.width = torsoConfig.width + 'px';
-            torsoImg.style.height = torsoConfig.height + 'px';
-            torsoImg.style.left = `-${torsoConfig.width / 2}px`;
-            torsoImg.style.top = `-${torsoConfig.height / 2}px`;
+            torsoImg.style.width = torsoPart.width + 'px';
+            torsoImg.style.height = torsoPart.height + 'px';
+            torsoImg.style.left = `-${torsoPart.width / 2}px`;
+            torsoImg.style.top = `-${torsoPart.height / 2}px`;
             torsoDiv.appendChild(torsoImg);
 
-            // ربط الأطراف هرمياً لضمان عدم انفصالها أبداً
-            ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg'].forEach(bName => {
-                const bConfig = bonesConfig[bName];
-                const bDiv = document.createElement('div');
-                bDiv.className = 'bone-node';
-                bDiv.id = `bone_${bName}`;
-                bDiv.style.zIndex = bConfig.zIndex;
-                bDiv.style.transformOrigin = bConfig.origin;
+            // ربط باقي الأجزاء بالجذع كأبناء لضمان ثبات الحركة الهرمية المرنة
+            ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg'].forEach(pName => {
+                const part = activeCharacter.parts[pName];
+                if (!part) return;
+
+                const pDiv = document.createElement('div');
+                pDiv.className = 'bone-node';
+                pDiv.id = `bone_${pName}`;
+                pDiv.style.zIndex = part.zIndex || 1;
+                pDiv.style.transformOrigin = (pName === 'head') ? 'bottom center' : 'top center';
                 
-                const bImg = document.createElement('img');
-                bImg.src = boneImages[bName];
-                bImg.className = 'body-part-img';
-                bImg.style.width = bConfig.width + 'px';
-                bImg.style.height = bConfig.height + 'px';
+                const pImg = document.createElement('img');
+                pImg.src = part.src;
+                pImg.className = 'body-part-img';
+                pImg.style.width = part.width + 'px';
+                pImg.style.height = part.height + 'px';
                 
-                if (bConfig.origin === 'top center') {
-                    bImg.style.left = `-${bConfig.width / 2}px`;
-                    bImg.style.top = '0px';
-                } else if (bConfig.origin === 'bottom center') {
-                    bImg.style.left = `-${bConfig.width / 2}px`;
-                    bImg.style.bottom = '0px';
+                if (pDiv.style.transformOrigin === 'top center') {
+                    pImg.style.left = `-${part.width / 2}px`;
+                    pImg.style.top = '0px';
+                } else {
+                    pImg.style.left = `-${part.width / 2}px`;
+                    pImg.style.bottom = '0px';
                 }
-                bDiv.appendChild(bImg);
-                torsoDiv.appendChild(bDiv);
+                pDiv.appendChild(pImg);
+                torsoDiv.appendChild(pDiv);
             });
 
             rigContainer.appendChild(torsoDiv);
@@ -426,19 +416,21 @@
         function animationLoop() {
             updatePhysics();
             
-            const torsoDiv = document.getElementById('bone_torso');
-            if (torsoDiv) {
-                const torsoConfig = bonesConfig.torso;
-                let extraY = Math.sin(animTime * 0.08) * 3;
-                torsoDiv.style.transform = `translate(${torsoConfig.x}px, ${torsoConfig.y + extraY}px) rotate(${boneAngles.torso}rad)`;
-                
-                ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg'].forEach((bName, idx) => {
-                    const bDiv = torsoDiv.children[idx + 1];
-                    const bConfig = bonesConfig[bName];
-                    if (bDiv) {
-                        bDiv.style.transform = `translate(${bConfig.x}px, ${bConfig.y}px) rotate(${boneAngles[bName]}rad)`;
-                    }
-                });
+            if (activeCharacter) {
+                const torsoDiv = document.getElementById('bone_torso');
+                if (torsoDiv) {
+                    const torsoPart = activeCharacter.parts.torso;
+                    let extraY = Math.sin(animTime * 0.08) * 3;
+                    torsoDiv.style.transform = `translate(${torsoPart.x}px, ${torsoPart.y + extraY}px) rotate(${boneAngles.torso || 0}rad)`;
+                    
+                    ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg'].forEach((pName, idx) => {
+                        const pDiv = torsoDiv.children[idx + 1];
+                        const part = activeCharacter.parts[pName];
+                        if (pDiv && part) {
+                            pDiv.style.transform = `translate(${part.x}px, ${part.y}px) rotate(${boneAngles[pName] || 0}rad)`;
+                        }
+                    });
+                }
             }
 
             requestAnimationFrame(animationLoop);
@@ -456,8 +448,7 @@
             toggleBtn.style.background = isPlaying ? "#4CAF50" : "#ff9800";
         });
 
-        buildUploadSlots();
-        initRigDOM();
+        loadCharacterLibrary();
         requestAnimationFrame(animationLoop);
     </script>
 </body>
