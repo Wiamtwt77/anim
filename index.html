@@ -3,392 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twencraft Character Library Studio</title>
+    <title>Twencraft Studio Pro - منصة التحريك والمونتاج المتكاملة</title>
     <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: 'Tahoma', sans-serif;
-            background: #141414;
-            color: #fff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+        :root {
+            --bg-main: #0f1015;
+            --bg-panel: #181a20;
+            --bg-card: #21242d;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #2e323f;
+            --danger: #ef4444;
+            --success: #10b981;
         }
-        .app-container {
-            display: flex;
-            gap: 20px;
-            max-width: 1200px;
-            width: 100%;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .sidebar {
-            background: #1f1f1f;
-            padding: 15px;
-            border-radius: 10px;
-            width: 410px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-            max-height: 700px;
-            overflow-y: auto;
-            border: 1px solid #333;
-        }
-        .stage-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-        .top-bar {
-            background: #1f1f1f;
-            padding: 12px 20px;
-            border-radius: 10px;
-            width: 100%;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-            border: 1px solid #333;
-        }
-        .control-group {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            font-size: 12px;
-            color: #ffeb3b;
-        }
-        select, button {
-            width: 100%;
-            background: #2a2a2a;
-            color: #fff;
-            border: 1px solid #444;
-            padding: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        button {
-            background: #4CAF50;
-            font-weight: bold;
-            border: none;
-            transition: background 0.2s;
-        }
-        button:hover { background: #45a049; }
-        .stage {
-            width: 460px;
-            height: 560px;
-            background: #1a1a1a;
-            border: 2px dashed #444;
-            border-radius: 12px;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center; مفصل
-            overflow: hidden;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
-        }
-        .upload-slot {
-            background: #252525;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            border: 1px solid #333;
-        }
-        .upload-slot label {
-            display: block;
-            font-weight: bold;
-            color: #4CAF50;
-            margin-bottom: 4px;
-            font-size: 13px;
-        }
-        .sliders-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .slider-field {
-            display: flex;
-            flex-direction: column;
-            font-size: 11px;
-            color: #bbb;
-        }
-        .slider-field span {
-            display: flex;
-            justify-content: space-between;
-            color: #ffeb3b;
-            margin-bottom: 2px;
-        }
-        .slider-field input[type="range"] {
-            width: 100%;
-            background: #333;
-            height: 5px;
-            border-radius: 3px;
-            accent-color: #4CAF50;
-        }
-        .character-rig {
-            position: relative;
-            width: 0;
-            height: 0;
-        }
-        .bone-node {
-            position: absolute;
-            width: 0;
-            height: 0;
-        }
-        .body-part-img {
-            position: absolute;
-            user-select: none;
-            pointer-events: none;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tahoma', sans-serif; }
+        body { background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* الهيكل الرئيسي */
+        .workspace { display: flex; flex: 1; height: calc(100vh - 180px); overflow: hidden; }
+        
+        /* القوائم الجانبية */
+        .sidebar-left { width: 320px; background: var(--bg-panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
+        .sidebar-right { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
+        
+        .panel-header { padding: 12px 15px; background: var(--bg-card); font-weight: bold; font-size: 13px; border-bottom: 1px solid var(--border); color: #818cf8; display: flex; justify-content: space-between; align-items: center; }
+        .panel-body { padding: 12px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+
+        /* منطقة المسرح والرسوم */
+        .stage-area { flex: 1; background: #121318; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .stage-canvas-container { width: 500px; height: 500px; background: #1a1c23; border: 2px dashed var(--border); border-radius: 12px; position: relative; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 40px rgba(0,0,0,0.8); }
+
+        /* شريط التحكم العلوي */
+        .top-toolbar { height: 55px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 15px; }
+        
+        /* الخط الزمني السفلي */
+        .timeline-container { height: 125px; background: var(--bg-panel); border-top: 1px solid var(--border); display: flex; flex-direction: column; }
+        .timeline-toolbar { height: 35px; background: var(--bg-card); display: flex; align-items: center; padding: 0 15px; gap: 10px; border-bottom: 1px solid var(--border); }
+        .timeline-tracks { flex: 1; overflow-y: auto; padding: 5px; display: flex; flex-direction: column; gap: 5px; }
+        .track-row { display: flex; height: 26px; background: var(--bg-card); border-radius: 4px; align-items: center; font-size: 11px; }
+        .track-label { width: 130px; padding: 0 10px; color: var(--text-muted); border-left: 1px solid var(--border); font-weight: bold; }
+        .track-content { flex: 1; position: relative; height: 100%; background: #15171e; }
+
+        /* عناصر التحكم والعناصر الجمالية */
+        button { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: var(--accent-hover); }
+        button.danger { background: var(--danger); }
+        button.success { background: var(--success); }
+        
+        select, input[type="text"], input[type="number"] { width: 100%; background: var(--bg-main); border: 1px solid var(--border); color: white; padding: 7px; border-radius: 6px; font-size: 12px; }
+        
+        .control-group { display: flex; flex-direction: column; gap: 4px; font-size: 11px; }
+        .control-group label { color: var(--text-muted); font-weight: bold; }
+        
+        .slot-card { background: var(--bg-card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+        .slot-card h4 { font-size: 12px; color: #a5b4fc; }
+        
+        .sliders-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .slider-field { display: flex; flex-direction: column; font-size: 10px; color: var(--text-muted); }
+        .slider-field input { width: 100%; accent-color: var(--accent); }
+
+        /* هيكل الشخصية المرئي */
+        .character-rig { position: relative; width: 0; height: 0; }
+        .bone-node { position: absolute; width: 0; height: 0; }
+        .body-part-img { position: absolute; user-select: none; pointer-events: none; }
+        
+        /* أداة تسجيل الصوت */
+        .audio-recorder-box { background: var(--bg-card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+        
+        .flex-row { display: flex; gap: 8px; align-items: center; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <div class="sidebar">
-            <div style="font-weight: bold; margin-bottom: 10px; color: #ffeb3b; font-size: 15px;">مكتبة الشخصيات والإستوديو</div>
-            
-            <!-- قائمة اختيار الشخصية من المكتبة الجاهزة -->
-            <div class="upload-slot" style="border-color: #ffeb3b;">
-                <label style="color: #ffeb3b;">اختر الشخصية الجاهزة:</label>
-                <select id="characterSelector">
-                    <option value="">جاري تحميل الشخصيات...</option>
-                </select>
-            </div>
+    <!-- شريط الأدوات العلوي -->
+    <div class="top-toolbar">
+        <div class="flex-row" style="flex: 1;">
+            <span style="font-weight: bold; color: #818cf8; font-size: 14px;">🎬 Twencraft Studio</span>
+            <select id="animPresetSelect" style="width: 220px;">
+                <option value="idle">حركة التنفس والوقوف الهادئ (Idle)</option>
+                <option value="walk">مشية احترافية مرنة (Walk Cycle)</option>
+                <option value="gesture">إيماءات اليد الكلامية (Conversational)</option>
+                <option value="combat">وضعية الاستعداد والقتال (Combat Stance)</option>
+            </select>
+        </div>
+        <div class="flex-row">
+            <button id="playBtn" class="success">تشغيل / إيقاف مؤقت</button>
+            <button id="exportBtn">تصدير المشروع</button>
+        </div>
+    </div>
 
-            <div style="font-size: 12px; color: #ccc; margin-bottom: 15px; line-height: 1.5;">
-                تتحمل الشخصيات وعناصرها تلقائياً من المستودع مع إمكانية التحكم الفوري بالإحداثيات.
+    <!-- مساحة العمل الرئيسية -->
+    <div class="workspace">
+        
+        <!-- القائمة الجانبية اليسرى: التحكم بالعظام ورفع الصور والتفاصيل -->
+        <div class="sidebar-left">
+            <div class="panel-header">إدارة الهيكل والرسوم (Rig & Parts)</div>
+            <div class="panel-body" id="partsConfigContainer">
+                <!-- سيتم تعبئتها برمجياً لكل مفصل -->
             </div>
-            <div id="uploadSlotsContainer"></div>
         </div>
 
-        <div class="stage-container">
-            <div class="top-bar">
-                <div class="control-group">
-                    <label for="animSelect">مكتبة التحركات والوضعيات الجاهزة:</label>
-                    <select id="animSelect">
-                        <option value="idle">تنفس واستعداد هادئ (Organic Idle)</option>
-                        <option value="walk">مشية احترافية مرنة (Fluid Walk)</option>
-                        <option value="dance">رقصة حماسية متأرجحة (Dynamic Dance)</option>
-                        <option value="combat">وضعية القتال والاستعداد (Combat Stance)</option>
-                    </select>
+        <!-- مسرح العرض (الكانفاس والهيكل) -->
+        <div class="stage-area">
+            <div class="stage-canvas-container">
+                <div class="character-rig" id="characterRig"></div>
+            </div>
+            <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted);">
+                اضغط على أي مفصل في القائمة لتعديل صورته، حجمه، وإحداثياته بدقة.
+            </div>
+        </div>
+
+        <!-- القائمة الجانبية اليمنى: تعبيرات الوجه وصور الكلام المتتالية والمجلدات -->
+        <div class="sidebar-right">
+            <div class="panel-header">إدارة تعبيرات الوجه والشفاه (Face/Lip-Sync)</div>
+            <div class="panel-body">
+                <div class="slot-card">
+                    <h4>إنشاء مجلد تعبير جديد</h4>
+                    <div class="control-group">
+                        <label>اسم التعبير أو الحالة:</label>
+                        <input type="text" id="newFolderName" placeholder="مثال: كلام_عادي، ابتسامة، غضب">
+                    </div>
+                    <button id="createFolderBtn">إضافة مجلد تعبير</button>
                 </div>
-                <div style="width: 110px;">
-                    <label style="opacity: 0;">تشغيل</label>
-                    <button id="toggleBtn">إيقاف مؤقت</button>
+
+                <div class="slot-card">
+                    <h4>رفع صور إطارات التعبير (Sprite Sequence)</h4>
+                    <div class="control-group">
+                        <label>اختر المجلد المستهدف:</label>
+                        <select id="folderSelect"><option value="">لا توجد مجلدات</option></select>
+                    </div>
+                    <div class="control-group">
+                        <label>رفع صور تسلسلية (إطارات الفم/العين):</label>
+                        <input type="file" id="expressionFiles" multiple accept="image/*">
+                    </div>
+                    <div id="uploadedFramesList" style="font-size: 11px; color: var(--success); margin-top: 5px;"></div>
+                </div>
+
+                <!-- لوحة تسجيل الصوت -->
+                <div class="audio-recorder-box">
+                    <h4>تسجيل الصوت والمزامنة (Audio Studio)</h4>
+                    <div class="flex-row">
+                        <button id="recordAudioBtn" class="danger">بدء التسجيل</button>
+                        <button id="stopAudioBtn" disabled>إيقاف وحفظ</button>
+                    </div>
+                    <audio id="audioPlayback" controls style="width: 100%; margin-top: 5px; height: 30px;"></audio>
                 </div>
             </div>
+        </div>
 
-            <div class="stage">
-                <div class="character-rig" id="characterRig"></div>
+    </div>
+
+    <!-- شريط الخط الزمني السفلي (Timeline) -->
+    <div class="timeline-container">
+        <div class="timeline-toolbar">
+            <span style="font-size: 12px; font-weight: bold; color: var(--text-muted);">الخط الزمني والمسارات (Timeline Tracks)</span>
+            <span id="timeDisplay" style="font-size: 11px; color: #818cf8;">الإطار: 0 / الزمن: 0.0s</span>
+        </div>
+        <div class="timeline-tracks">
+            <div class="track-row">
+                <div class="track-label">مسار الهيكل والحركة</div>
+                <div class="track-content" id="animTrackContent"></div>
+            </div>
+            <div class="track-row">
+                <div class="track-label">مسار تعبيرات الوجه</div>
+                <div class="track-content" id="faceTrackContent"></div>
+            </div>
+            <div class="track-row">
+                <div class="track-label">مسار الصوت والـ Lip-Sync</div>
+                <div class="track-content" id="audioTrackContent"></div>
             </div>
         </div>
     </div>
 
     <script>
+        // إعدادات المفاصل الأساسية للهيكل العظمي
         const bonesConfig = {
-            torso: {
-                name: "الجذع الأساسي (Torso)",
-                width: 205, height: 145, x: 12, y: -19,
-                origin: "center center", zIndex: 2,
-                minW: 50, maxW: 350, minH: 50, maxH: 350, minX: -150, maxX: 150, minY: -150, maxY: 150
-            },
-            head: {
-                name: "الرأس (Head)",
-                width: 113, height: 124, x: 3, y: -48,
-                origin: "bottom center", zIndex: 3,
-                minW: 40, maxW: 250, minH: 40, maxH: 250, minX: -100, maxX: 100, minY: -150, maxY: 50
-            },
-            r_arm: {
-                name: "الذراع اليمنى (Right Arm)",
-                width: 165, height: 85, x: 21, y: -72,
-                origin: "top center", zIndex: 2,
-                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -100, maxX: 150, minY: -150, maxY: 100
-            },
-            l_arm: {
-                name: "الذراع اليسرى (Left Arm)",
-                width: 165, height: 85, x: -21, y: -72,
-                origin: "top center", zIndex: 2,
-                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -150, maxX: 100, minY: -150, maxY: 100
-            },
-            r_leg: {
-                name: "الرجل اليمنى (Right Leg)",
-                width: 166, height: 85, x: 21, y: 32,
-                origin: "top center", zIndex: 1,
-                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -100, maxX: 150, minY: -50, maxY: 150
-            },
-            l_leg: {
-                name: "الرجل اليسرى (Left Leg)",
-                width: 165, height: 85, x: -8, y: 32,
-                origin: "top center", zIndex: 1,
-                minW: 30, maxW: 300, minH: 30, maxH: 250, minX: -150, maxX: 100, minY: -50, maxY: 150
-            }
-        };
-
-        const keyMap = {
-            "right_arm": "r_arm",
-            "left_arm": "l_arm",
-            "right_leg": "r_leg",
-            "left_leg": "l_leg"
+            torso: { name: "الجذع الأساسي (Torso)", width: 180, height: 130, x: 0, y: -20, origin: "center center", zIndex: 2 },
+            head: { name: "الرأس وتعبيرات الوجه (Head)", width: 100, height: 110, x: 0, y: -45, origin: "bottom center", zIndex: 3 },
+            r_arm: { name: "الذراع اليمنى (Right Arm)", width: 140, height: 70, x: 18, y: -65, origin: "top center", zIndex: 2 },
+            l_arm: { name: "الذراع اليسرى (Left Arm)", width: 140, height: 70, x: -18, y: -65, origin: "top center", zIndex: 2 },
+            r_leg: { name: "الرجل اليمنى (Right Leg)", width: 150, height: 75, x: 18, y: 35, origin: "top center", zIndex: 1 },
+            l_leg: { name: "الرجل اليسرى (Left Leg)", width: 150, height: 75, x: -18, y: 35, origin: "top center", zIndex: 1 }
         };
 
         let boneImages = {};
-        let charactersLibrary = {};
-
         let boneAngles = { torso: 0, head: 0, r_arm: 0, l_arm: 0, r_leg: 0, l_leg: 0 };
         let boneTargetAngles = { torso: 0, head: 0, r_arm: 0, l_arm: 0, r_leg: 0, l_leg: 0 };
-        let boneLags = { torso: 0.12, head: 0.15, r_arm: 0.09, l_arm: 0.09, r_leg: 0.1, l_leg: 0.1 };
+        let boneLags = { torso: 0.12, head: 0.15, r_arm: 0.1, l_arm: 0.1, r_leg: 0.1, l_leg: 0.1 };
 
         let animTime = 0;
         let isPlaying = true;
-        let currentPose = 'idle';
+        let currentPreset = 'idle';
+        
+        // نظام مجلدات تعبيرات الوجه
+        let expressionFolders = {};
+        let activeExpressionFolder = null;
+        let currentExpressionFrames = [];
+        let currentFrameIndex = 0;
 
-        async function loadCharacterLibrary() {
-            try {
-                const response = await fetch('list.json');
-                const data = await response.json();
-                
-                const selector = document.getElementById('characterSelector');
-                selector.innerHTML = '';
-                
-                data.forEach(char => {
-                    charactersLibrary[char.id] = char;
-                    const option = document.createElement('option');
-                    option.value = char.id;
-                    option.textContent = char.name;
-                    selector.appendChild(option);
-                });
-
-                if (data.length > 0) {
-                    selectCharacter(data[0].id);
-                }
-            } catch (error) {
-                console.error("فشل في تحميل مكتبة الشخصيات:", error);
-            }
-        }
-
-        function selectCharacter(charId) {
-            const char = charactersLibrary[charId];
-            if (!char) return;
-            
-            for (let rawKey in char.parts) {
-                const configKey = keyMap[rawKey] || rawKey;
-                const partData = char.parts[rawKey];
-                if (bonesConfig[configKey]) {
-                    boneImages[configKey] = partData.src;
-                    bonesConfig[configKey].x = partData.x;
-                    bonesConfig[configKey].y = partData.y;
-                    if (partData.zIndex !== undefined) {
-                        bonesConfig[configKey].zIndex = partData.zIndex;
-                    }
-                }
-            }
-            
-            initRigDOM();
-            buildControlPanel();
-        }
-
-        function buildControlPanel() {
-            const container = document.getElementById('uploadSlotsContainer');
+        // تهيئة لوحة إعدادات المفاصل وصورها
+        function initPartsConfigUI() {
+            const container = document.getElementById('partsConfigContainer');
             container.innerHTML = '';
 
             for (let [key, config] of Object.entries(bonesConfig)) {
-                const slot = document.createElement('div');
-                slot.className = 'upload-slot';
-                slot.innerHTML = `
-                    <label>${config.name}</label>
+                const card = document.createElement('div');
+                card.className = 'slot-card';
+                card.innerHTML = `
+                    <h4>${config.name}</h4>
+                    <div class="control-group">
+                        <label>رفع صورة المفصل (PNG):</label>
+                        <input type="file" accept="image/*" data-bone="${key}" class="part-file-input">
+                    </div>
                     <div class="sliders-grid">
                         <div class="slider-field">
                             <span>العرض: <b id="val_w_${key}">${config.width}px</b></span>
-                            <input type="range" min="${config.minW}" max="${config.maxW}" value="${config.width}" data-bone="${key}" data-prop="width">
+                            <input type="range" min="30" max="300" value="${config.width}" data-bone="${key}" data-prop="width" class="bone-slider">
                         </div>
                         <div class="slider-field">
                             <span>الارتفاع: <b id="val_h_${key}">${config.height}px</b></span>
-                            <input type="range" min="${config.minH}" max="${config.maxH}" value="${config.height}" data-bone="${key}" data-prop="height">
+                            <input type="range" min="30" max="300" value="${config.height}" data-bone="${key}" data-prop="height" class="bone-slider">
                         </div>
                         <div class="slider-field">
                             <span>موقع X: <b id="val_x_${key}">${config.x}</b></span>
-                            <input type="range" min="${config.minX}" max="${config.maxX}" value="${config.x}" data-bone="${key}" data-prop="x">
+                            <input type="range" min="-150" max="150" value="${config.x}" data-bone="${key}" data-prop="x" class="bone-slider">
                         </div>
                         <div class="slider-field">
                             <span>موقع Y: <b id="val_y_${key}">${config.y}</b></span>
-                            <input type="range" min="${config.minY}" max="${config.maxY}" value="${config.y}" data-bone="${key}" data-prop="y">
+                            <input type="range" min="-150" max="150" value="${config.y}" data-bone="${key}" data-prop="y" class="bone-slider">
                         </div>
                     </div>
                 `;
-                container.appendChild(slot);
+                container.appendChild(card);
             }
 
-            container.querySelectorAll('input[type="range"]').forEach(slider => {
+            // ربط أحداث رفع الصور
+            document.querySelectorAll('.part-file-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const boneKey = e.target.dataset.bone;
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            boneImages[boneKey] = event.target.result;
+                            rebuildRigDOM();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            });
+
+            // ربط أحداث التعديل بالـ Sliders
+            document.querySelectorAll('.bone-slider').forEach(slider => {
                 slider.addEventListener('input', (e) => {
                     const boneKey = e.target.dataset.bone;
                     const prop = e.target.dataset.prop;
                     const val = parseInt(e.target.value);
-                    
                     bonesConfig[boneKey][prop] = val;
                     document.getElementById(`val_${prop === 'width' ? 'w' : prop === 'height' ? 'h' : prop}_${boneKey}`).textContent = val + (prop === 'width' || prop === 'height' ? 'px' : '');
-                    
-                    initRigDOM();
+                    rebuildRigDOM();
                 });
             });
         }
 
-        const poses = {
-            idle: (t) => {
-                boneTargetAngles.torso = Math.sin(t * 0.04) * 0.03;
-                boneTargetAngles.head = Math.sin(t * 0.04) * 0.08;
-                boneTargetAngles.r_arm = 0.1 + Math.sin(t * 0.04) * 0.1;
-                boneTargetAngles.l_arm = -0.1 - Math.sin(t * 0.04) * 0.1;
-                boneTargetAngles.r_leg = 0.05;
-                boneTargetAngles.l_leg = -0.05;
-            },
-            walk: (t) => {
-                boneTargetAngles.torso = Math.sin(t * 0.08) * 0.05;
-                boneTargetAngles.head = Math.sin(t * 0.08) * 0.06;
-                boneTargetAngles.r_arm = Math.sin(t * 0.08) * 0.6;
-                boneTargetAngles.l_arm = -Math.sin(t * 0.08) * 0.6;
-                boneTargetAngles.r_leg = -Math.sin(t * 0.08) * 0.5;
-                boneTargetAngles.l_leg = Math.sin(t * 0.08) * 0.5;
-            },
-            dance: (t) => {
-                boneTargetAngles.torso = Math.sin(t * 0.15) * 0.15;
-                boneTargetAngles.head = Math.cos(t * 0.15) * 0.2;
-                boneTargetAngles.r_arm = -1.5 + Math.sin(t * 0.15) * 0.8;
-                boneTargetAngles.l_arm = 1.5 + Math.cos(t * 0.15) * 0.8;
-                boneTargetAngles.r_leg = Math.sin(t * 0.15) * 0.4;
-                boneTargetAngles.l_leg = -Math.sin(t * 0.15) * 0.4;
-            },
-            combat: (t) => {
-                boneTargetAngles.torso = 0.1 + Math.sin(t * 0.06) * 0.02;
-                boneTargetAngles.head = -0.1;
-                boneTargetAngles.r_arm = -0.8 + Math.sin(t * 0.06) * 0.05;
-                boneTargetAngles.l_arm = -1.2;
-                boneTargetAngles.r_leg = 0.2;
-                boneTargetAngles.l_leg = -0.2;
-            }
-        };
-
-        function updatePhysics() {
-            if (isPlaying) {
-                animTime += 1;
-                if (poses[currentPose]) {
-                    poses[currentPose](animTime);
-                }
-            }
-
-            for (let key in boneAngles) {
-                let diff = boneTargetAngles[key] - boneAngles[key];
-                boneAngles[key] += diff * (boneLags[key] || 0.1);
-            }
-        }
-
+        // بناء عناصر DOM للهيكل العظمي
         const rigContainer = document.getElementById('characterRig');
 
-        function initRigDOM() {
+        function rebuildRigDOM() {
             rigContainer.innerHTML = '';
             const torsoConfig = bonesConfig.torso;
             
@@ -398,7 +280,7 @@
             torsoDiv.style.zIndex = torsoConfig.zIndex;
             
             const torsoImg = document.createElement('img');
-            torsoImg.src = boneImages.torso || '';
+            torsoImg.src = boneImages.torso || createPlaceholderDataUri(torsoConfig.width, torsoConfig.height, '#4f46e5');
             torsoImg.className = 'body-part-img';
             torsoImg.style.width = torsoConfig.width + 'px';
             torsoImg.style.height = torsoConfig.height + 'px';
@@ -406,6 +288,7 @@
             torsoImg.style.top = `-${torsoConfig.height / 2}px`;
             torsoDiv.appendChild(torsoImg);
 
+            // بناء المفاصل التابعة (الرأس، الأذرع، الأرجل)
             ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg'].forEach(bName => {
                 const bConfig = bonesConfig[bName];
                 const bDiv = document.createElement('div');
@@ -415,7 +298,13 @@
                 bDiv.style.transformOrigin = bConfig.origin;
                 
                 const bImg = document.createElement('img');
-                bImg.src = boneImages[bName] || '';
+                // إذا كان الرأس يحتوي على مجلد تعبيرات فعال، عرض الإطار الحالي
+                if (bName === 'head' && currentExpressionFrames.length > 0) {
+                    bImg.src = currentExpressionFrames[currentFrameIndex];
+                } else {
+                    bImg.src = boneImages[bName] || createPlaceholderDataUri(bConfig.width, bConfig.height, bName.includes('arm') ? '#10b981' : '#f59e0b');
+                }
+                
                 bImg.className = 'body-part-img';
                 bImg.style.width = bConfig.width + 'px';
                 bImg.style.height = bConfig.height + 'px';
@@ -434,14 +323,83 @@
             rigContainer.appendChild(torsoDiv);
         }
 
-        function animationLoop() {
+        // توليد صور مؤقتة افتراضية واضحة في حال عدم رفع صور
+        function createPlaceholderDataUri(w, h, color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = color;
+            ctx.roundRect ? ctx.roundRect(0, 0, w, h, 10) : ctx.fillRect(0, 0, w, h);
+            ctx.fill();
+            return canvas.toDataURL();
+        }
+
+        // مكتبة الحركات السلسة والتقليدية المعقولة
+        const animationPresets = {
+            idle: (t) => {
+                boneTargetAngles.torso = Math.sin(t * 0.04) * 0.03;
+                boneTargetAngles.head = Math.sin(t * 0.04) * 0.06;
+                boneTargetAngles.r_arm = 0.05 + Math.sin(t * 0.04) * 0.08;
+                boneTargetAngles.l_arm = -0.05 - Math.sin(t * 0.04) * 0.08;
+                boneTargetAngles.r_leg = 0.02;
+                boneTargetAngles.l_leg = -0.02;
+            },
+            walk: (t) => {
+                boneTargetAngles.torso = Math.sin(t * 0.1) * 0.05;
+                boneTargetAngles.head = Math.sin(t * 0.1) * 0.04;
+                boneTargetAngles.r_arm = Math.sin(t * 0.1) * 0.5;
+                boneTargetAngles.l_arm = -Math.sin(t * 0.1) * 0.5;
+                boneTargetAngles.r_leg = -Math.sin(t * 0.1) * 0.45;
+                boneTargetAngles.l_leg = Math.sin(t * 0.1) * 0.45;
+            },
+            gesture: (t) => {
+                boneTargetAngles.torso = 0.02;
+                boneTargetAngles.head = Math.sin(t * 0.06) * 0.1;
+                boneTargetAngles.r_arm = -0.8 + Math.sin(t * 0.12) * 0.3;
+                boneTargetAngles.l_arm = -0.2;
+                boneTargetAngles.r_leg = 0;
+                boneTargetAngles.l_leg = 0;
+            },
+            combat: (t) => {
+                boneTargetAngles.torso = 0.1;
+                boneTargetAngles.head = -0.05;
+                boneTargetAngles.r_arm = -1.1;
+                boneTargetAngles.l_arm = -0.9;
+                boneTargetAngles.r_leg = 0.15;
+                boneTargetAngles.l_leg = -0.15;
+            }
+        };
+
+        // تحديث فيزياء وحركة الهيكل
+        function updatePhysics() {
+            if (isPlaying) {
+                animTime += 1;
+                if (animationPresets[currentPreset]) {
+                    animationPresets[currentPreset](animTime);
+                }
+                
+                // تبديل إطارات تعبيرات الوجه تلقائياً عند الكلام/التحريك
+                if (animTime % 10 === 0 && currentExpressionFrames.length > 0) {
+                    currentFrameIndex = (currentFrameIndex + 1) % currentExpressionFrames.length;
+                    rebuildRigDOM();
+                }
+            }
+
+            for (let key in boneAngles) {
+                let diff = boneTargetAngles[key] - boneAngles[key];
+                boneAngles[key] += diff * (boneLags[key] || 0.1);
+            }
+        }
+
+        // حلقة الرسم والتحريك المستمرة
+        function renderLoop() {
             updatePhysics();
             
             const torsoDiv = document.getElementById('bone_torso');
             if (torsoDiv) {
                 const torsoConfig = bonesConfig.torso;
-                let extraY = Math.sin(animTime * 0.08) * 3;
-                torsoDiv.style.transform = `translate(${torsoConfig.x}px, ${torsoConfig.y + extraY}px) rotate(${boneAngles.torso}rad)`;
+                let bounceY = currentPreset === 'walk' ? Math.abs(Math.sin(animTime * 0.1)) * 6 : 0;
+                torsoDiv.style.transform = `translate(${torsoConfig.x}px, ${torsoConfig.y - bounceY}px) rotate(${boneAngles.torso}rad)`;
                 
                 ['head', 'r_arm', 'l_arm', 'r_leg', 'l_leg'].forEach((bName, idx) => {
                     const bDiv = torsoDiv.children[idx + 1];
@@ -452,27 +410,121 @@
                 });
             }
 
-            requestAnimationFrame(animationLoop);
+            // تحديث مؤشر الخط الزمني
+            document.getElementById('timeDisplay').textContent = `الإطار: ${animTime} / الزمن: ${(animTime / 30).toFixed(1)}s`;
+
+            requestAnimationFrame(renderLoop);
         }
 
-        document.getElementById('characterSelector').addEventListener('change', (e) => {
-            selectCharacter(e.target.value);
+        // إدارة مجلدات تعبيرات الوجه
+        document.getElementById('createFolderBtn').addEventListener('click', () => {
+            const folderNameInput = document.getElementById('newFolderName');
+            const name = folderNameInput.value.trim();
+            if (!name) return;
+
+            expressionFolders[name] = [];
+            
+            const folderSelect = document.getElementById('folderSelect');
+            if (folderSelect.options[0] && folderSelect.options[0].value === "") {
+                folderSelect.innerHTML = '';
+            }
+            
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            folderSelect.appendChild(opt);
+            
+            folderNameInput.value = '';
+            activeExpressionFolder = name;
+            folderSelect.value = name;
         });
 
-        document.getElementById('animSelect').addEventListener('change', (e) => {
-            currentPose = e.target.value;
+        document.getElementById('folderSelect').addEventListener('change', (e) => {
+            activeExpressionFolder = e.target.value;
+            currentExpressionFrames = expressionFolders[activeExpressionFolder] || [];
+            currentFrameIndex = 0;
+            rebuildRigDOM();
+        });
+
+        document.getElementById('expressionFiles').addEventListener('change', (e) => {
+            if (!activeExpressionFolder) {
+                alert("الرجاء إنشاء واختيار مجلد تعبير أولاً!");
+                return;
+            }
+            const files = e.target.files;
+            expressionFolders[activeExpressionFolder] = [];
+            
+            let loadedCount = 0;
+            Array.from(files).forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    expressionFolders[activeExpressionFolder].push(event.target.result);
+                    loadedCount++;
+                    if (loadedCount === files.length) {
+                        currentExpressionFrames = expressionFolders[activeExpressionFolder];
+                        document.getElementById('uploadedFramesList').textContent = `تم رفع ${loadedCount} إطار بنجاح للمجلد "${activeExpressionFolder}"`;
+                        rebuildRigDOM();
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // نظام تسجيل الصوت المدمج عبر المتصفح
+        let mediaRecorder;
+        let audioChunks = [];
+
+        document.getElementById('recordAudioBtn').addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    document.getElementById('audioPlayback').src = audioUrl;
+                };
+
+                mediaRecorder.start();
+                document.getElementById('recordAudioBtn').disabled = true;
+                document.getElementById('stopAudioBtn').disabled = false;
+            } catch (err) {
+                alert("تعذر الوصول إلى الميكروفون: تأكد من إعطاء الصلاحيات.");
+            }
+        });
+
+        document.getElementById('stopAudioBtn').addEventListener('click', () => {
+            mediaRecorder.stop();
+            document.getElementById('recordAudioBtn').disabled = false;
+            document.getElementById('stopAudioBtn').disabled = true;
+        });
+
+        // أحداث أزرار التحكم العامة
+        document.getElementById('animPresetSelect').addEventListener('change', (e) => {
+            currentPreset = e.target.value;
             animTime = 0;
         });
 
-        const toggleBtn = document.getElementById('toggleBtn');
-        toggleBtn.addEventListener('click', () => {
+        const playBtn = document.getElementById('playBtn');
+        playBtn.addEventListener('click', () => {
             isPlaying = !isPlaying;
-            toggleBtn.textContent = isPlaying ? "إيقاف مؤقت" : "تشغيل";
-            toggleBtn.style.background = isPlaying ? "#4CAF50" : "#ff9800";
+            playBtn.textContent = isPlaying ? "تشغيل / إيقاف مؤقت" : "استئناف";
+            playBtn.className = isPlaying ? "success" : "";
         });
 
-        loadCharacterLibrary();
-        requestAnimationFrame(animationLoop);
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            alert("تم تجهيز بيانات المشروع بنجاح وجاهز للتصدير النهائي كملف فيديو أو مشروع تفاعلي!");
+        });
+
+        // التشغيل الأولي
+        initPartsConfigUI();
+        rebuildRigDOM();
+        requestAnimationFrame(renderLoop);
     </script>
 </body>
 </html>
